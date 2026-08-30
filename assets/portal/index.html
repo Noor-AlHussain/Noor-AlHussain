@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NoorHack — 3D Interactive Universe</title>
+<meta name="description" content="Security Researcher &amp; Software Engineer — interactive 3D universe built with Babylon.js, WebGPU, Raw WebGL2, and OGL."/>
+
+<!-- Open Graph -->
+<meta property="og:title" content="NoorHack — 3D Interactive Universe"/>
+<meta property="og:description" content="Security Researcher & Software Engineer — Babylon.js PBR, WebGPU compute shaders, raw WebGL2 GLSL ES 3.0."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://noor-alhussain.github.io/Noor-AlHussain/"/>
+<meta property="og:image" content="https://noor-alhussain.github.io/Noor-AlHussain/og-card.svg"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="NoorHack — 3D Interactive Universe"/>
+<meta name="twitter:description" content="Security Researcher & Software Engineer — multi-engine 3D portfolio."/>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0812'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%2300ffff' font-family='monospace'%3EN%3C/text%3E%3C/svg%3E"/>
+
+<style>
+:root{
+  --void:#0a0812; --void2:#12101a; --cyan:#00ffff; --violet:#8a2be2;
+  --green:#00ff41; --orange:#ff6600; --red:#ff003c;
+  --border:rgba(0,255,255,0.14); --muted:rgba(232,232,240,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--void);color:#e8e8f0;
+  font-family:'Share Tech Mono','Courier New',Courier,monospace;
+  min-height:100vh;overflow-x:hidden;}
+
+/* ── Loading screen ── */
+#loader{position:fixed;inset:0;background:var(--void);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;transition:opacity .5s ease;}
+#loader.hide{opacity:0;pointer-events:none;}
+.ascii{font-size:9px;line-height:1.1;color:var(--cyan);white-space:pre;
+  text-shadow:0 0 12px rgba(0,255,255,.5);opacity:0;animation:ascii-in .6s .1s forwards;}
+@keyframes ascii-in{to{opacity:1}}
+.load-bar{width:240px;height:3px;background:rgba(0,255,255,.1);position:relative;overflow:hidden;}
+.load-bar-fill{position:absolute;inset:0;background:var(--cyan);width:0%;
+  animation:load-progress 1.6s ease-out forwards;box-shadow:0 0 8px var(--cyan);}
+@keyframes load-progress{to{width:100%}}
+.load-text{font-size:10px;color:var(--muted);letter-spacing:.3em;}
+
+/* ── Main content ── */
+#main{opacity:0;transition:opacity .6s ease;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:50px 20px 30px;gap:32px;}
+#main.show{opacity:1;}
+
+h1{font-family:Orbitron,Impact,'Arial Narrow',Arial,sans-serif;font-size:30px;
+  color:var(--cyan);letter-spacing:.32em;text-shadow:0 0 22px rgba(0,255,255,.5);
+  text-align:center;}
+.sub{font-size:11px;color:rgba(0,255,255,.4);letter-spacing:.4em;text-align:center;}
+
+.engines{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:700px;}
+.engine-tag{font-size:9px;letter-spacing:.15em;padding:4px 10px;
+  border:1px solid var(--border);color:var(--muted);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:14px;width:100%;max-width:920px;}
+a.card{display:flex;flex-direction:column;gap:8px;padding:20px 22px;
+  border:1px solid var(--border);text-decoration:none;background:rgba(0,255,255,.02);
+  position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s,transform .2s;}
+a.card:hover{border-color:rgba(0,255,255,.5);box-shadow:0 0 22px rgba(0,255,255,.12);
+  background:rgba(0,255,255,.04);transform:translateY(-2px);}
+a.card::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  transition:left .5s ease;}
+a.card:hover::before{left:100%;}
+.ct{font-size:13px;color:var(--cyan);letter-spacing:.18em;}
+.cd{font-size:10px;color:rgba(232,232,240,.4);letter-spacing:.1em;}
+.ce{font-size:8px;color:rgba(138,43,226,.7);letter-spacing:.18em;margin-top:2px;}
+
+/* ── Footer ── */
+.foot{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px;}
+.ft{font-size:10px;color:rgba(0,255,255,.2);letter-spacing:.28em;}
+.links{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.lnk{font-size:10px;color:rgba(0,255,255,.5);letter-spacing:.1em;
+  border:1px solid var(--border);padding:5px 12px;cursor:pointer;background:none;
+  font-family:inherit;transition:color .2s,border-color .2s;}
+.lnk:hover{color:var(--cyan);border-color:rgba(0,255,255,.5);}
+.copied{color:var(--green)!important;border-color:var(--green)!important;}
+
+/* ── Konami hint (subtle, bottom corner) ── */
+#konami-hint{position:fixed;bottom:10px;right:14px;font-size:8px;
+  color:rgba(0,255,255,.12);letter-spacing:.2em;}
+
+/* ── Hidden terminal overlay ── */
+#secret{position:fixed;inset:0;background:rgba(10,8,18,.97);z-index:1000;
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+  gap:14px;backdrop-filter:blur(4px);}
+#secret.show{display:flex;}
+#secret pre{color:var(--green);font-size:12px;line-height:1.6;white-space:pre-wrap;
+  max-width:600px;padding:0 20px;}
+#secret .close-hint{font-size:9px;color:var(--muted);letter-spacing:.2em;}
+
+@media (max-width:480px){
+  h1{font-size:22px;letter-spacing:.18em;}
+  .ascii{font-size:6px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loader">
+  <div class="ascii">  _   _                 _   _            _
+ | \ | | ___   ___  _ _| | | | __ _  ___| | __
+ |  \| |/ _ \ / _ \| '__| |_| |/ _` |/ __| |/ /
+ | |\  | (_) | (_) | |  |  _  | (_| | (__|   <
+ |_| \_|\___/ \___/|_|  |_| |_|\__,_|\___|_|\_\</div>
+  <div class="load-bar"><div class="load-bar-fill"></div></div>
+  <div class="load-text">INITIALIZING UNIVERSE...</div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <h1>NOORHACK</h1>
+  <div class="sub">// 3D INTERACTIVE UNIVERSE</div>
+
+  <div class="engines">
+    <span class="engine-tag">BABYLON.JS PBR</span>
+    <span class="engine-tag">WEBGPU COMPUTE</span>
+    <span class="engine-tag">RAW WEBGL2</span>
+    <span class="engine-tag">GLSL ES 3.0</span>
+    <span class="engine-tag">OGL</span>
+    <span class="engine-tag">RUST → WASM</span>
+  </div>
+
+  <div class="grid" id="scene-grid">
+    <a class="card" href="atom/">
+      <div class="ct">QUANTUM ATOM</div>
+      <div class="cd">Electron orbital simulation</div>
+      <div class="ce">BABYLON.JS · PBR · GLOW</div>
+    </a>
+    <a class="card" href="dna/">
+      <div class="ct">DNA HELIX</div>
+      <div class="cd">Iridescent double strand</div>
+      <div class="ce">BABYLON.JS · PBR IRIDESCENCE</div>
+    </a>
+    <a class="card" href="particles/">
+      <div class="ct">THE VOID</div>
+      <div class="cd">1,000,000 GPU particles</div>
+      <div class="ce">WEBGPU · WGSL COMPUTE</div>
+    </a>
+    <a class="card" href="universe/">
+      <div class="ct">SKILL UNIVERSE</div>
+      <div class="cd">3D force-directed graph</div>
+      <div class="ce">OGL · MINIMAL WEBGL</div>
+    </a>
+    <a class="card" href="neural/">
+      <div class="ct">NEURAL NETWORK</div>
+      <div class="cd">Live activation propagation</div>
+      <div class="ce">RAW WEBGL2 · INSTANCED</div>
+    </a>
+    <a class="card" href="wormhole/">
+      <div class="ct">VOID PORTAL</div>
+      <div class="cd">Pure shader spacetime warp</div>
+      <div class="ce">RAW WEBGL2 · GLSL ES 3.0</div>
+    </a>
+    <a class="card" href="hologram/">
+      <div class="ct">HOLOGRAM CUBE</div>
+      <div class="cd">HUD identity projection</div>
+      <div class="ce">THREE.JS · CSS3D</div>
+    </a>
+    <a class="card" href="cpu/">
+      <div class="ct">CPU DIE</div>
+      <div class="cd">Exploded silicon layers</div>
+      <div class="ce">THREE.JS · SHARED SHADER</div>
+    </a>
+    <a class="card" href="rust-engine/">
+      <div class="ct">RUST ENGINE</div>
+      <div class="cd">Voxel sphere — native compiled</div>
+      <div class="ce">RUST · WGPU · WASM</div>
+    </a>
+    <a class="card" href="system-map/">
+      <div class="ct">SYSTEM MAP</div>
+      <div class="cd">Every layer, one clickable graph</div>
+      <div class="ce">REAL &lt;A&gt; LINKS, REAL HOVER</div>
+    </a>
+    <a class="card" href="compiler-playground/">
+      <div class="ct">COMPILER PLAYGROUND</div>
+      <div class="cd">Lexer &#8594; parser &#8594; bytecode &#8594; VM</div>
+      <div class="ce">HAND-WRITTEN, NO PARSER-GEN</div>
+    </a>
+    <a class="card" href="memory-visualizer/">
+      <div class="ct">MEMORY SAFETY</div>
+      <div class="cd">CWE-121 stack overflow, visualized</div>
+      <div class="ce">EDUCATIONAL SIMULATION</div>
+    </a>
+    <a class="card" href="timing-demo/">
+      <div class="ct">TIMING SIDE-CHANNEL</div>
+      <div class="cd">Naive vs constant-time, measured live</div>
+      <div class="ce">REAL BENCHMARK, YOUR BROWSER</div>
+    </a>
+    <a class="card" href="sat-solver/">
+      <div class="ct">P vs NP — SAT SOLVER</div>
+      <div class="cd">DPLL solver, exponential blowup chart</div>
+      <div class="ce">RUNS IN-BROWSER, NOT SIMULATED</div>
+    </a>
+  </div>
+
+  <div class="foot">
+    <div class="links">
+      <button class="lnk" data-copy="https://github.com/Noor-AlHussain">GITHUB</button>
+      <button class="lnk" data-copy="https://x.com/NoorHack">X / TWITTER</button>
+      <button class="lnk" data-copy="https://www.linkedin.com/in/Noor-AlHussain">LINKEDIN</button>
+      <button class="lnk" data-copy="noorhack.work@gmail.com">EMAIL</button>
+    </div>
+    <div class="ft">// Built with precision. No tracking. No ads.</div>
+  </div>
+</div>
+
+<div id="konami-hint">&#8593;&#8593;&#8595;&#8595;&#8592;&#8594;&#8592;&#8594;BA</div>
+
+<!-- Hidden terminal — Konami code unlock -->
+<div id="secret">
+  <pre id="secret-text"></pre>
+  <div class="close-hint">PRESS ESC TO CLOSE</div>
+</div>
+
+<script>
+// ── Loading screen ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    document.getElementById('main').classList.add('show');
+  }, 1500);
+});
+
+// ── Copy to clipboard ────────────────────────────────────────────────
+document.querySelectorAll('.lnk').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const val = btn.dataset.copy;
+    try {
+      await navigator.clipboard.writeText(val);
+      const original = btn.textContent;
+      btn.textContent = 'COPIED';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+    } catch (e) {
+      window.open(val.startsWith('http') ? val : `mailto:${val}`, '_blank');
+    }
+  });
+});
+
+// ── Konami code easter egg ───────────────────────────────────────────
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let buffer = [];
+
+const SECRET_MSG = `> ACCESS GRANTED
+
+Identity  : Noor AlHussain
+Handle    : @NoorHack
+Location  : Republic of Iraq
+Stack     : Silicon -> Firmware -> OS -> Security -> AI
+
+You found the Konami code. That puts you in a small
+group of people who actually look beneath the surface
+of things — which is the entire job description of a
+security researcher.
+
+Decode this for the next layer:
+4e6f6f7220416c487573736169 6e202d204e6f6f7248 61636b
+
+- NoorHack`;
+
+window.addEventListener('keydown', (e) => {
+  buffer.push(e.key);
+  if (buffer.length > KONAMI.length) buffer.shift();
+  if (buffer.join(',') === KONAMI.join(',')) {
+    document.getElementById('secret-text').textContent = SECRET_MSG;
+    document.getElementById('secret').classList.add('show');
+    buffer = [];
+  }
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('secret').classList.remove('show');
+});
+
+// ── Touch-friendly Konami trigger: tap title 5x ──────────────────────
+let tapCount = 0, tapTimer = null;
+document.querySelector('h1').addEventListener('click', () => {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 1200);
+  if (tapCount >= 5) {
+    document.getElementById('secret-text').textContent = SECRET_MSG;
+    document.getElementById('secret').classList.add('show');
+    tapCount = 0;
+  }
+});
+
+// ── Register service worker for offline support ──────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

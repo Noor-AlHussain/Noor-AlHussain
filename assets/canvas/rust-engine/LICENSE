@@ -1,0 +1,26 @@
+This directory (assets/canvas/rust-engine/) is licensed separately from
+the rest of this repository. See the note at the top of the root
+LICENSE file for why.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Copyright (C) 2026 Noor AlHussain
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The full text of GPL-3.0 is long (roughly 700 lines); it is
+deliberately not duplicated in this file to avoid the far worse
+outcome of an accidentally truncated, misleading partial copy sitting
+in version control. The canonical text is at:
+https://www.gnu.org/licenses/gpl-3.0.html

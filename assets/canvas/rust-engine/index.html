@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>void-engine — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    #void-engine-canvas{width:100%;height:100%;}
+    #void-engine-canvas canvas{width:100%!important;height:100%!important;display:block;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono','Courier New',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;text-align:center;}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono','Courier New',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;text-align:right;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono','Courier New',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono','Courier New',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.15em;font-size:12px;max-width:480px;line-height:1.6;}
+    #boot-log{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:4;
+      font-family:'Share Tech Mono','Courier New',monospace;font-size:11px;color:#00ff41;
+      letter-spacing:.1em;white-space:pre;text-align:left;opacity:1;transition:opacity .4s;}
+    #boot-log.hide{opacity:0;pointer-events:none;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">RUST &#x2192; WASM &#x2192; WEBGPU<br/>compiled, not interpreted</div>
+  <div id="label">// VOID-ENGINE — VOXEL SPHERE — RUST + WGPU + WASM</div>
+  <div id="boot-log">$ cargo build --target wasm32-unknown-unknown --release
+$ wasm-bindgen --target web ./target/.../void_engine.wasm
+&gt; loading module...</div>
+  <div id="void-engine-canvas" role="img" aria-label="Interactive voxel sphere rendered by a Rust and wgpu engine compiled to WebAssembly and running on WebGPU"></div>
+  <div id="fallback">
+    <p>WebGPU is required for void-engine and is not available in this browser.<br/>
+    Supported on Chrome/Edge 113+, Safari 26+ (macOS Tahoe/iOS 26+), and<br/>
+    Firefox on Windows since v141 — no longer Nightly-only. Firefox on<br/>
+    Linux/Android isn't there yet.</p>
+  </div>
+
+  <script type="module">
+    if (!navigator.gpu) {
+      document.getElementById('fallback').style.display = 'flex';
+      document.getElementById('boot-log').classList.add('hide');
+    } else {
+      import('./pkg/void_engine.js')
+        .then(mod => mod.default())
+        .then(() => {
+          setTimeout(() => document.getElementById('boot-log').classList.add('hide'), 600);
+        })
+        .catch(err => {
+          console.error('void-engine failed to load:', err);
+          document.getElementById('fallback').style.display = 'flex';
+          document.getElementById('fallback').querySelector('p').textContent =
+            'void-engine failed to initialize: ' + err.message;
+          document.getElementById('boot-log').classList.add('hide');
+        });
+    }
+  </script>
+</body>
+</html>

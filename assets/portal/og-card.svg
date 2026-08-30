@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="bg-glow" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#12101a"/>
+      <stop offset="100%" stop-color="#0a0812"/>
+    </radialGradient>
+    <filter id="og-glow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg-glow)"/>
+  <rect x="0" y="0" width="1200" height="2" fill="#00ffff" opacity="0.4"/>
+  <rect x="0" y="628" width="1200" height="2" fill="#00ffff" opacity="0.4"/>
+
+  <!-- Corner brackets -->
+  <polyline points="40,40 40,80 80,80" fill="none" stroke="#8a2be2" stroke-width="2" opacity="0.6"/>
+  <polyline points="1160,40 1160,80 1120,80" fill="none" stroke="#8a2be2" stroke-width="2" opacity="0.6"/>
+  <polyline points="40,590 40,550 80,550" fill="none" stroke="#8a2be2" stroke-width="2" opacity="0.6"/>
+  <polyline points="1160,590 1160,550 1120,550" fill="none" stroke="#8a2be2" stroke-width="2" opacity="0.6"/>
+
+  <text x="600" y="300" text-anchor="middle"
+        font-family="Orbitron,Impact,'Arial Narrow',Arial,sans-serif"
+        font-size="74" font-weight="700" fill="#00ffff" letter-spacing="14"
+        filter="url(#og-glow)">NOORHACK</text>
+
+  <text x="600" y="350" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',monospace"
+        font-size="16" fill="rgba(0,255,255,0.5)" letter-spacing="6">// 3D INTERACTIVE UNIVERSE</text>
+
+  <text x="600" y="410" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',monospace"
+        font-size="18" fill="rgba(232,232,240,0.75)" letter-spacing="2">Security Researcher &amp; Software Engineer</text>
+
+  <text x="600" y="440" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',monospace"
+        font-size="14" fill="rgba(255,102,0,0.8)" letter-spacing="3">Republic of Iraq</text>
+
+  <!-- Engine badges -->
+  <g font-family="'Share Tech Mono','Courier New',monospace" font-size="11" letter-spacing="1.5">
+    <rect x="260" y="480" width="150" height="26" rx="2" fill="none" stroke="rgba(0,255,255,0.3)"/>
+    <text x="335" y="497" text-anchor="middle" fill="#00ffff">BABYLON.JS PBR</text>
+
+    <rect x="425" y="480" width="150" height="26" rx="2" fill="none" stroke="rgba(138,43,226,0.4)"/>
+    <text x="500" y="497" text-anchor="middle" fill="#8a2be2">WEBGPU COMPUTE</text>
+
+    <rect x="590" y="480" width="130" height="26" rx="2" fill="none" stroke="rgba(0,255,65,0.3)"/>
+    <text x="655" y="497" text-anchor="middle" fill="#00ff41">RAW WEBGL2</text>
+
+    <rect x="735" y="480" width="120" height="26" rx="2" fill="none" stroke="rgba(255,102,0,0.4)"/>
+    <text x="795" y="497" text-anchor="middle" fill="#ff6600">RUST/WASM</text>
+  </g>
+
+  <text x="600" y="560" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',monospace"
+        font-size="12" fill="rgba(0,255,255,0.25)" letter-spacing="4">GITHUB.COM/NOOR-ALHUSSAIN</text>
+</svg>

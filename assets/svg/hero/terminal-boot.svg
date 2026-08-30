@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 268" width="900" height="268">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }</style>
+  </defs>
+  <foreignObject width="900" height="268">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        .t{width:900px;height:268px;background:#0a0812;border:1px solid rgba(0,255,255,0.18);
+           font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:13px;overflow:hidden;position:relative;}
+        .bar{display:flex;align-items:center;gap:8px;padding:7px 14px;
+             background:rgba(138,43,226,0.07);border-bottom:1px solid rgba(0,255,255,0.1);}
+        .dot{width:10px;height:10px;border-radius:50%;}
+        .dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+        .bt{font-size:10px;color:rgba(0,255,255,0.35);letter-spacing:.2em;margin-left:6px;}
+        .bb{margin-left:auto;color:rgba(0,255,255,0.55);animation:blink 1s step-end infinite;}
+        .lines{padding:14px 18px;display:flex;flex-direction:column;gap:5px;}
+        .line{display:flex;align-items:baseline;white-space:nowrap;overflow:hidden;}
+
+        /* Character-by-character reveal via max-width clip */
+        .cmd{display:inline-block;overflow:hidden;white-space:nowrap;max-width:0;
+             animation:type-in linear forwards;}
+
+        .pr{color:rgba(138,43,226,0.9);}
+        .pa{color:rgba(0,255,255,0.6);}
+        .ok{color:#00ff41;margin-left:6px;}
+        .vl{color:rgba(255,102,0,0.9);}
+        .cu{display:inline-block;width:8px;height:13px;background:rgba(0,255,255,0.8);
+            margin-left:2px;animation:blink 1s step-end infinite;vertical-align:bottom;}
+
+        /* Each line's cmd gets a unique duration based on char count */
+        /* Approx 80ms per char, staggered */
+        .l1 .cmd{animation-duration:1.6s; animation-delay:0.3s;}
+        .l2 .cmd{animation-duration:2.8s; animation-delay:1.1s;}
+        .l3 .cmd{animation-duration:2.4s; animation-delay:2.0s;}
+        .l4 .cmd{animation-duration:2.2s; animation-delay:2.8s;}
+        .l5 .cmd{animation-duration:1.6s; animation-delay:3.6s;}
+        .l6 .cmd{animation-duration:0.8s; animation-delay:4.4s;}
+        .l7 .cmd{animation-duration:3.6s; animation-delay:4.9s;}
+        .l8 .cmd{animation-duration:0.8s; animation-delay:5.8s;}
+        .l9 .cmd{animation-duration:3.2s; animation-delay:6.3s;}
+        .l10{opacity:0;animation:line-appear 0.1s 7.8s forwards;}
+
+        @keyframes type-in{from{max-width:0}to{max-width:100ch}}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes line-appear{to{opacity:1}}
+      </style>
+      <div class="t">
+        <div class="bar">
+          <span class="dot dr"/><span class="dot dy"/><span class="dot dg"/>
+          <span class="bt">init_identity.sh — noorhack@babylon:~</span>
+          <span class="bb">&#9646;</span>
+        </div>
+        <div class="lines">
+          <div class="line l1">
+            <span class="pr">root</span><span class="pa">@noorhack</span>
+            <span class="cmd">:~$ ./init_identity.sh</span>
+          </div>
+          <div class="line l2">
+            <span class="vl">[BIOS]&#160;</span>
+            <span class="cmd">Initializing hardware interfaces...............<span class="ok">OK</span></span>
+          </div>
+          <div class="line l3">
+            <span class="vl">[KERN]&#160;</span>
+            <span class="cmd">Loading kernel modules.........................<span class="ok">OK</span></span>
+          </div>
+          <div class="line l4">
+            <span class="vl">[SEC ]&#160;</span>
+            <span class="cmd">Mounting security layer........................<span class="ok">OK</span></span>
+          </div>
+          <div class="line l5">
+            <span class="vl">[AI  ]&#160;</span>
+            <span class="cmd">Initializing inference engine..................<span class="ok">OK</span></span>
+          </div>
+          <div class="line l6">
+            <span class="pr">root</span><span class="pa">@noorhack</span>
+            <span class="cmd">:~$ whoami</span>
+          </div>
+          <div class="line l7">
+            <span class="vl">&gt;&#160;</span>
+            <span class="cmd">Noor AlHussain — Software Engineer &amp; Security Researcher</span>
+          </div>
+          <div class="line l8">
+            <span class="pr">root</span><span class="pa">@noorhack</span>
+            <span class="cmd">:~$ uname -a</span>
+          </div>
+          <div class="line l9">
+            <span class="vl">&gt;&#160;</span>
+            <span class="cmd">Republic of Iraq | Kernel | Security | AI | Low-Level</span>
+          </div>
+          <div class="line l10">
+            <span class="pr">root</span><span class="pa">@noorhack</span>
+            <span style="color:rgba(232,232,240,0.9)">:~$&#160;</span><span class="cu"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

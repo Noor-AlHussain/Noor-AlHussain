@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Compiler Playground — NoorHack</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#0a0812;color:#e8e8f0;
+    font-family:'Share Tech Mono','Courier New',Courier,monospace;
+    min-height:100vh;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+
+  /* Focus indicator — visible only for keyboard/programmatic focus, not
+     mouse clicks, so it doesn't fight the design while staying genuinely
+     usable for keyboard navigation. #00ffff against #0a0812 clears
+     contrast requirements by a wide margin. */
+  :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+
+  #back{position:fixed;top:16px;left:20px;font-size:11px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;text-decoration:none;border:1px solid rgba(0,255,255,0.4);
+    padding:6px 12px;z-index:10;}
+  #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+  #badge{position:fixed;top:16px;right:20px;font-size:9px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;border:1px solid rgba(0,255,255,0.1);padding:4px 10px;text-align:right;}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:64px 24px 40px;display:flex;flex-direction:column;gap:18px;}
+  h1{font-size:22px;letter-spacing:.25em;color:#00ffff;text-align:center;
+    text-shadow:0 0 16px rgba(0,255,255,.4);}
+  .sub{font-size:11px;letter-spacing:.2em;color:rgba(0,255,255,.55);text-align:center;margin-bottom:10px;}
+
+  .editor-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .editor-col{flex:1;min-width:280px;display:flex;flex-direction:column;gap:8px;}
+  label{font-size:10px;letter-spacing:.2em;color:rgba(187,136,255,0.8);}
+
+  textarea{width:100%;height:160px;background:#0d0b16;border:1px solid rgba(0,255,255,0.4);
+    color:#e8e8f0;font-family:inherit;font-size:13px;padding:12px;resize:vertical;outline:none;}
+  textarea:focus{border-color:rgba(0,255,255,0.55);}
+
+  .examples{display:flex;gap:8px;flex-wrap:wrap;}
+  .ex-btn{font-size:10px;letter-spacing:.1em;color:rgba(0,255,255,0.6);
+    background:none;border:1px solid rgba(0,255,255,0.4);padding:8px 12px;cursor:pointer;
+    font-family:inherit;min-height:24px;}
+  .ex-btn:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+
+  .run-btn{font-size:13px;letter-spacing:.2em;color:#0a0812;background:#00ffff;
+    border:none;padding:12px 28px;cursor:pointer;font-family:inherit;font-weight:700;
+    box-shadow:0 0 18px rgba(0,255,255,0.3);align-self:center;}
+  .run-btn:hover{box-shadow:0 0 28px rgba(0,255,255,0.6);}
+  .run-btn:active{transform:scale(0.98);}
+
+  .pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media(max-width:900px){.pipeline{grid-template-columns:1fr;}}
+  .stage{background:#0d0b16;border:1px solid rgba(0,255,255,0.12);padding:12px;
+    min-height:220px;display:flex;flex-direction:column;gap:6px;}
+  .stage-title{font-size:10px;letter-spacing:.2em;color:#00ffff;border-bottom:1px solid rgba(0,255,255,0.15);
+    padding-bottom:6px;margin-bottom:4px;}
+  .stage-body{font-size:11px;color:rgba(232,232,240,0.8);overflow:auto;flex:1;white-space:pre-wrap;
+    line-height:1.6;}
+
+  .token{display:inline-block;margin:1px 3px 1px 0;padding:2px 6px;border-radius:2px;font-size:10px;
+    opacity:0;animation:tok-in .25s forwards;}
+  @keyframes tok-in{to{opacity:1;}}
+  .tok-num{background:rgba(255,102,0,0.15);color:#ff9944;border:1px solid rgba(255,102,0,0.3);}
+  .tok-id{background:rgba(0,255,255,0.12);color:#00ffff;border:1px solid rgba(0,255,255,0.4);}
+  .tok-kw{background:rgba(138,43,226,0.15);color:#bb88ff;border:1px solid rgba(138,43,226,0.3);}
+  .tok-op{background:rgba(0,255,65,0.12);color:#66ff99;border:1px solid rgba(0,255,65,0.3);}
+  .tok-punc{background:rgba(255,255,255,0.06);color:rgba(232,232,240,0.6);border:1px solid rgba(255,255,255,0.15);}
+
+  .ast-node{margin-left:14px;border-left:1px dashed rgba(0,255,255,0.2);padding-left:8px;}
+  .ast-label{color:#00ffff;}
+  .ast-val{color:#ff9944;}
+
+  .bc-line{display:flex;gap:8px;}
+  .bc-addr{color:rgba(232,232,240,0.55);width:28px;}
+  .bc-op{color:#bb88ff;}
+  .bc-arg{color:#ff9944;}
+  .bc-line.active{background:rgba(0,255,255,0.08);}
+
+  .vm-state{display:flex;flex-direction:column;gap:10px;font-size:11px;}
+  .vm-row{display:flex;gap:10px;align-items:center;}
+  .vm-key{color:rgba(187,136,255,0.8);width:50px;}
+  .stack-cell{display:inline-block;background:rgba(0,255,255,0.1);border:1px solid rgba(0,255,255,0.4);
+    padding:3px 8px;margin-right:4px;color:#00ffff;}
+  .vm-output{margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,255,255,0.12);color:#00ff41;}
+
+  .error{color:#ff003c;}
+  .speed-row{display:flex;gap:10px;align-items:center;justify-content:center;font-size:10px;
+    color:rgba(232,232,240,0.5);letter-spacing:.15em;}
+  input[type=range]{accent-color:#00ffff;}
+</style>
+</head>
+<body>
+<a id="back" href="../../../README.md">&#x2190; BACK</a>
+<div id="badge">CUSTOM LEXER &#x2192; PARSER &#x2192; BYTECODE &#x2192; VM<br/>written from scratch, no parser-generator</div>
+
+<div class="wrap">
+  <h1>COMPILER PLAYGROUND</h1>
+  <div class="sub">// a toy language compiled end to end, in your browser</div>
+
+  <div class="editor-row">
+    <div class="editor-col">
+      <label>SOURCE CODE</label>
+      <textarea id="src" aria-label="Toy language source code editor" spellcheck="false">let x = 4
+let y = 7
+let z = (x + y) * 2
+print z
+print z - x</textarea>
+      <div class="examples">
+        <button class="ex-btn" data-ex="0">arithmetic</button>
+        <button class="ex-btn" data-ex="1">loop</button>
+        <button class="ex-btn" data-ex="2">conditional</button>
+        <button class="ex-btn" data-ex="3">syntax error</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="run-btn" id="run">COMPILE &amp; RUN</button>
+
+  <div class="speed-row">
+    <span>VM STEP SPEED</span>
+    <input type="range" id="speed" min="80" max="900" value="350" aria-label="VM execution step speed in milliseconds"/>
+    <span id="speed-val">350ms</span>
+  </div>
+
+  <div class="pipeline">
+    <div class="stage">
+      <div class="stage-title">[ 01 ] LEXER &#x2192; TOKENS</div>
+      <div class="stage-body" id="out-tokens"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-title">[ 02 ] PARSER &#x2192; AST</div>
+      <div class="stage-body" id="out-ast" aria-live="polite"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-title">[ 03 ] CODEGEN &#x2192; BYTECODE</div>
+      <div class="stage-body" id="out-bytecode"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-title">[ 04 ] VM &#x2192; EXECUTION</div>
+      <div class="stage-body" id="out-vm" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════════
+   A small, hand-written compiler pipeline for a toy expression/statement
+   language. Every stage below — lexer, recursive-descent parser, a
+   stack-based bytecode compiler, and the VM that executes it — is
+   written from first principles (no parser-generator, no external
+   compiler-construction library). The point of this tool is to make
+   that pipeline visible and steppable, not just claim it exists.
+   ════════════════════════════════════════════════════════════════════ */
+
+// ── 1. LEXER ──────────────────────────────────────────────────────────
+const KEYWORDS = new Set(['let','print','if','else','while']);
+const TOKEN_RE = /\s*(?:(\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(==|!=|<=|>=|&&|\|\||[+\-*/%=<>()\{\};])|(\S))/g;
+
+function lex(src){
+  const tokens = [];
+  let m;
+  TOKEN_RE.lastIndex = 0;
+  while((m = TOKEN_RE.exec(src)) !== null){
+    const [, num, id, op, junk] = m;
+    if(num !== undefined) tokens.push({type:'NUM', value:parseFloat(num), pos:m.index});
+    else if(id !== undefined) tokens.push({type: KEYWORDS.has(id) ? 'KEYWORD' : 'IDENT', value:id, pos:m.index});
+    else if(op !== undefined) tokens.push({type:'OP', value:op, pos:m.index});
+    else if(junk !== undefined) throw new CompileError(`Unexpected character '${junk}'`, m.index);
+  }
+  tokens.push({type:'EOF', value:null, pos:src.length});
+  return tokens;
+}
+
+class CompileError extends Error {
+  constructor(msg, pos){ super(msg); this.pos = pos; }
+}
+
+// ── 2. PARSER — recursive descent, produces an AST ──────────────────
+class Parser {
+  constructor(tokens){ this.toks = tokens; this.i = 0; }
+  peek(){ return this.toks[this.i]; }
+  next(){ return this.toks[this.i++]; }
+  expect(type, value){
+    const t = this.next();
+    if(t.type !== type || (value !== undefined && t.value !== value)){
+      throw new CompileError(`Expected ${value ?? type} but got '${t.value ?? t.type}'`, t.pos);
+    }
+    return t;
+  }
+
+  parseProgram(){
+    const stmts = [];
+    while(this.peek().type !== 'EOF') stmts.push(this.parseStatement());
+    return { kind:'Program', body: stmts };
+  }
+
+  parseStatement(){
+    const t = this.peek();
+    if(t.type === 'KEYWORD' && t.value === 'let') return this.parseLet();
+    if(t.type === 'KEYWORD' && t.value === 'print') return this.parsePrint();
+    if(t.type === 'KEYWORD' && t.value === 'if') return this.parseIf();
+    if(t.type === 'KEYWORD' && t.value === 'while') return this.parseWhile();
+    if(t.type === 'IDENT') return this.parseAssign();
+    throw new CompileError(`Unexpected token '${t.value}' at start of statement`, t.pos);
+  }
+
+  parseAssign(){
+    const name = this.expect('IDENT').value;
+    this.expect('OP','=');
+    const value = this.parseExpr();
+    return { kind:'Assign', name, value };
+  }
+
+  parseLet(){
+    this.expect('KEYWORD','let');
+    const name = this.expect('IDENT').value;
+    this.expect('OP','=');
+    const value = this.parseExpr();
+    return { kind:'Let', name, value };
+  }
+  parsePrint(){
+    this.expect('KEYWORD','print');
+    return { kind:'Print', value: this.parseExpr() };
+  }
+  parseIf(){
+    this.expect('KEYWORD','if');
+    this.expect('OP','(');
+    const cond = this.parseExpr();
+    this.expect('OP',')');
+    this.expect('OP','{');
+    const then = [];
+    while(!(this.peek().type==='OP' && this.peek().value==='}')) then.push(this.parseStatement());
+    this.expect('OP','}');
+    let alt = [];
+    if(this.peek().type==='KEYWORD' && this.peek().value==='else'){
+      this.next(); this.expect('OP','{');
+      while(!(this.peek().type==='OP' && this.peek().value==='}')) alt.push(this.parseStatement());
+      this.expect('OP','}');
+    }
+    return { kind:'If', cond, then, alt };
+  }
+  parseWhile(){
+    this.expect('KEYWORD','while');
+    this.expect('OP','(');
+    const cond = this.parseExpr();
+    this.expect('OP',')');
+    this.expect('OP','{');
+    const body = [];
+    while(!(this.peek().type==='OP' && this.peek().value==='}')) body.push(this.parseStatement());
+    this.expect('OP','}');
+    return { kind:'While', cond, body };
+  }
+
+  // Expression grammar (lowest to highest precedence):
+  // comparison -> additive -> multiplicative -> primary
+  parseExpr(){ return this.parseComparison(); }
+  parseComparison(){
+    let left = this.parseAdditive();
+    while(this.peek().type==='OP' && ['==','!=','<','>','<=','>='].includes(this.peek().value)){
+      const op = this.next().value;
+      left = { kind:'BinOp', op, left, right: this.parseAdditive() };
+    }
+    return left;
+  }
+  parseAdditive(){
+    let left = this.parseMultiplicative();
+    while(this.peek().type==='OP' && ['+','-'].includes(this.peek().value)){
+      const op = this.next().value;
+      left = { kind:'BinOp', op, left, right: this.parseMultiplicative() };
+    }
+    return left;
+  }
+  parseMultiplicative(){
+    let left = this.parsePrimary();
+    while(this.peek().type==='OP' && ['*','/','%'].includes(this.peek().value)){
+      const op = this.next().value;
+      left = { kind:'BinOp', op, left, right: this.parsePrimary() };
+    }
+    return left;
+  }
+  parsePrimary(){
+    const t = this.peek();
+    if(t.type === 'NUM'){ this.next(); return { kind:'Num', value:t.value }; }
+    if(t.type === 'IDENT'){ this.next(); return { kind:'Ident', name:t.value }; }
+    if(t.type === 'OP' && t.value === '('){
+      this.next();
+      const e = this.parseExpr();
+      this.expect('OP', ')');
+      return e;
+    }
+    throw new CompileError(`Unexpected token '${t.value}' in expression`, t.pos);
+  }
+}
+
+// ── 3. CODEGEN — AST to stack-based bytecode ─────────────────────────
+function compile(ast){
+  const code = [];
+  let labelCounter = 0;
+  const emit = (op, arg) => { code.push({op, arg}); return code.length-1; };
+
+  function genExpr(node){
+    switch(node.kind){
+      case 'Num':   emit('PUSH', node.value); break;
+      case 'Ident': emit('LOAD', node.name);  break;
+      case 'BinOp':
+        genExpr(node.left); genExpr(node.right);
+        emit({'+':'ADD','-':'SUB','*':'MUL','/':'DIV','%':'MOD',
+              '==':'EQ','!=':'NEQ','<':'LT','>':'GT','<=':'LE','>=':'GE'}[node.op]);
+        break;
+    }
+  }
+  function genStmt(node){
+    switch(node.kind){
+      case 'Let':    genExpr(node.value); emit('STORE', node.name); break;
+      case 'Assign': genExpr(node.value); emit('STORE', node.name); break;
+      case 'Print':  genExpr(node.value); emit('PRINT'); break;
+      case 'If': {
+        genExpr(node.cond);
+        const jz = emit('JZ', null);
+        node.then.forEach(genStmt);
+        const jmp = emit('JMP', null);
+        code[jz].arg = code.length;
+        node.alt.forEach(genStmt);
+        code[jmp].arg = code.length;
+        break;
+      }
+      case 'While': {
+        const start = code.length;
+        genExpr(node.cond);
+        const jz = emit('JZ', null);
+        node.body.forEach(genStmt);
+        emit('JMP', start);
+        code[jz].arg = code.length;
+        break;
+      }
+    }
+  }
+  ast.body.forEach(genStmt);
+  emit('HALT');
+  return code;
+}
+
+// ── 4. VM — executes the bytecode on an explicit stack + memory ──────
+function* vmSteps(code){
+  const stack = [];
+  const mem = {};
+  let pc = 0;
+  const output = [];
+
+  while(pc < code.length){
+    const { op, arg } = code[pc];
+    const snapshotBefore = { pc, stack: [...stack], mem: {...mem} };
+
+    switch(op){
+      case 'PUSH':  stack.push(arg); break;
+      case 'LOAD':  stack.push(mem[arg] ?? 0); break;
+      case 'STORE': mem[arg] = stack.pop(); break;
+      case 'ADD':   { const b=stack.pop(),a=stack.pop(); stack.push(a+b); break; }
+      case 'SUB':   { const b=stack.pop(),a=stack.pop(); stack.push(a-b); break; }
+      case 'MUL':   { const b=stack.pop(),a=stack.pop(); stack.push(a*b); break; }
+      case 'DIV':   { const b=stack.pop(),a=stack.pop(); stack.push(a/b); break; }
+      case 'MOD':   { const b=stack.pop(),a=stack.pop(); stack.push(a%b); break; }
+      case 'EQ':    { const b=stack.pop(),a=stack.pop(); stack.push(a===b?1:0); break; }
+      case 'NEQ':   { const b=stack.pop(),a=stack.pop(); stack.push(a!==b?1:0); break; }
+      case 'LT':    { const b=stack.pop(),a=stack.pop(); stack.push(a<b?1:0); break; }
+      case 'GT':    { const b=stack.pop(),a=stack.pop(); stack.push(a>b?1:0); break; }
+      case 'LE':    { const b=stack.pop(),a=stack.pop(); stack.push(a<=b?1:0); break; }
+      case 'GE':    { const b=stack.pop(),a=stack.pop(); stack.push(a>=b?1:0); break; }
+      case 'PRINT': output.push(stack[stack.length-1]); break;
+      case 'JZ':    if(stack.pop() === 0) { pc = arg; continue; } break;
+      case 'JMP':   pc = arg; continue;
+      case 'HALT':  yield { ...snapshotBefore, op, arg, output:[...output], halted:true }; return;
+    }
+    pc++;
+    yield { ...snapshotBefore, op, arg, output:[...output], halted:false };
+  }
+}
+
+// ── UI glue ───────────────────────────────────────────────────────────
+const EXAMPLES = [
+`let x = 4
+let y = 7
+let z = (x + y) * 2
+print z
+print z - x`,
+`let i = 0
+let sum = 0
+while (i < 5) {
+  sum = sum + i
+  i = i + 1
+}
+print sum`,
+`let a = 10
+let b = 20
+if (a < b) {
+  print 1
+} else {
+  print 0
+}`,
+`let x = (4 + )`,
+];
+
+document.querySelectorAll('.ex-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.getElementById('src').value = EXAMPLES[+btn.dataset.ex];
+  });
+});
+
+const speedEl = document.getElementById('speed');
+const speedValEl = document.getElementById('speed-val');
+speedEl.addEventListener('input', ()=> speedValEl.textContent = speedEl.value+'ms');
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderTokens(tokens){
+  const el = document.getElementById('out-tokens');
+  el.innerHTML = '';
+  tokens.filter(t=>t.type!=='EOF').forEach((t,i)=>{
+    const span = document.createElement('span');
+    const cls = t.type==='NUM' ? 'tok-num' : t.type==='IDENT' ? 'tok-id'
+              : t.type==='KEYWORD' ? 'tok-kw' : (['+','-','*','/','%','=','==','!=','<','>','<=','>='].includes(t.value) ? 'tok-op' : 'tok-punc');
+    span.className = 'token ' + cls;
+    span.style.animationDelay = (i*15)+'ms';
+    span.textContent = t.value;
+    el.appendChild(span);
+  });
+}
+
+function renderAst(node, depth=0){
+  if(Array.isArray(node)) return node.map(n=>renderAst(n,depth)).join('');
+  let html = `<div class="ast-node"><span class="ast-label">${node.kind}</span>`;
+  const fields = Object.entries(node).filter(([k])=>k!=='kind');
+  for(const [k,v] of fields){
+    if(v && typeof v === 'object' && !Array.isArray(v)){
+      html += `<div class="ast-node">${k}: ${renderAst(v, depth+1)}</div>`;
+    } else if(Array.isArray(v)){
+      html += `<div class="ast-node">${k}: [${v.length}]${renderAst(v, depth+1)}</div>`;
+    } else {
+      html += ` <span class="ast-val">${k}=${escapeHtml(v)}</span>`;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderBytecode(code, activeIdx=-1){
+  const el = document.getElementById('out-bytecode');
+  el.innerHTML = code.map((c,i)=>
+    `<div class="bc-line ${i===activeIdx?'active':''}" id="bc-${i}">` +
+    `<span class="bc-addr">${i}:</span>` +
+    `<span class="bc-op">${c.op}</span>` +
+    (c.arg!==undefined && c.arg!==null ? ` <span class="bc-arg">${escapeHtml(c.arg)}</span>` : '') +
+    `</div>`
+  ).join('');
+}
+
+let vmTimer = null;
+
+function runVM(code){
+  const el = document.getElementById('out-vm');
+  const gen = vmSteps(code);
+  if(vmTimer) clearInterval(vmTimer);
+
+  function step(){
+    const { value, done } = gen.next();
+    if(done){ clearInterval(vmTimer); return; }
+
+    document.querySelectorAll('.bc-line').forEach(l=>l.classList.remove('active'));
+    const activeLine = document.getElementById('bc-'+value.pc);
+    if(activeLine) activeLine.classList.add('active');
+
+    el.innerHTML = `
+      <div class="vm-state">
+        <div class="vm-row"><span class="vm-key">PC</span> ${value.pc}</div>
+        <div class="vm-row"><span class="vm-key">OP</span> ${value.op}${value.arg!==undefined&&value.arg!==null?' '+escapeHtml(value.arg):''}</div>
+        <div class="vm-row"><span class="vm-key">STACK</span> ${value.stack.map(v=>`<span class="stack-cell">${v}</span>`).join('') || '<span style="opacity:.3">empty</span>'}</div>
+        <div class="vm-row"><span class="vm-key">MEM</span> ${Object.entries(value.mem).map(([k,v])=>`<span class="stack-cell">${k}=${v}</span>`).join('') || '<span style="opacity:.3">empty</span>'}</div>
+        <div class="vm-output">OUTPUT&gt; ${value.output.join('\\n')}</div>
+      </div>`;
+
+    if(value.halted) clearInterval(vmTimer);
+  }
+  step();
+  vmTimer = setInterval(step, +speedEl.value);
+}
+
+function compileAndRun(){
+  const src = document.getElementById('src').value;
+  document.getElementById('out-tokens').innerHTML = '';
+  document.getElementById('out-ast').innerHTML = '';
+  document.getElementById('out-bytecode').innerHTML = '';
+  document.getElementById('out-vm').innerHTML = '';
+  if(vmTimer) clearInterval(vmTimer);
+
+  try {
+    const tokens = lex(src);
+    renderTokens(tokens);
+
+    const ast = new Parser(tokens).parseProgram();
+    document.getElementById('out-ast').innerHTML = renderAst(ast.body);
+
+    const code = compile(ast);
+    renderBytecode(code);
+
+    setTimeout(()=>runVM(code), 300);
+  } catch(e){
+    const target = e instanceof CompileError ? 'out-ast' : 'out-vm';
+    document.getElementById(target).innerHTML = `<span class="error">ERROR: ${escapeHtml(e.message)}</span>`;
+  }
+}
+
+document.getElementById('run').addEventListener('click', compileAndRun);
+compileAndRun();
+</script>
+</body>
+</html>

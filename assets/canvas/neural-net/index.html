@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Neural Network — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    canvas{display:block;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;border:1px solid rgba(0,255,255,0.1);
+      padding:4px 10px;}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.1em;font-size:12px;max-width:480px;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">RAW WEBGL2 — INSTANCED DRAWING</div>
+  <div id="label">// NEURAL NETWORK — LIVE ACTIVATION PROPAGATION</div>
+  <canvas id="c" role="img" aria-label="Interactive neural network diagram — five layers of glowing nodes connected by lines, with signal pulses propagating between layers"></canvas>
+  <div id="fallback">
+    <p>This scene needs WebGL2, which isn't available in this browser or has been disabled.<br/>
+    Try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration enabled.</p>
+  </div>
+
+  <script>
+  'use strict';
+
+  const canvas = document.getElementById('c');
+  canvas.width  = innerWidth  * Math.min(devicePixelRatio,2);
+  canvas.height = innerHeight * Math.min(devicePixelRatio,2);
+  canvas.style.width  = innerWidth  + 'px';
+  canvas.style.height = innerHeight + 'px';
+
+  const gl = canvas.getContext('webgl2', { antialias:true, alpha:false });
+  if (!gl) {
+    document.getElementById('fallback').style.display = 'flex';
+    canvas.style.display = 'none';
+    throw new Error('WebGL2 unavailable for neural-net');
+  }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Shaders ────────────────────────────────────────────────────────────
+  function mkShader(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  function mkProg(vs, fs){
+    const p = gl.createProgram();
+    gl.attachShader(p, mkShader(gl.VERTEX_SHADER,   vs));
+    gl.attachShader(p, mkShader(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    return p;
+  }
+
+  // Node program — instanced spheres
+  const NODE_VS = `#version 300 es
+precision highp float;
+in vec2 aQuad;         // unit quad [-1,1]
+in vec3 aCenter;       // instanced node center (world)
+in vec4 aColor;        // instanced color + size (w=radius)
+in float aActivation;  // instanced activation
+uniform mat4 uMVP;
+out vec4 vColor;
+out vec2 vUV;
+out float vAct;
+void main(){
+  float r = aColor.w * (1.0 + aActivation * 0.7);
+  vec4 pos = uMVP * vec4(aCenter, 1.0);
+  pos.xy += aQuad * r * vec2(1.0/800.0, 1.0/600.0) * pos.w * 2.0;
+  gl_Position = pos;
+  vColor = aColor;
+  vUV    = aQuad;
+  vAct   = aActivation;
+}`;
+  const NODE_FS = `#version 300 es
+precision highp float;
+in vec4 vColor; in vec2 vUV; in float vAct;
+out vec4 fragColor;
+void main(){
+  float d = length(vUV);
+  if(d > 1.0) discard;
+  float alpha = (1.0 - d*d) * (0.7 + vAct*0.3);
+  vec3 col = mix(vColor.rgb * 0.4, vColor.rgb, vAct);
+  col = mix(col, vec3(1.0), smoothstep(0.6,0.0,d)*vAct*0.5);
+  fragColor = vec4(col, alpha);
+}`;
+
+  // Edge program — lines
+  const EDGE_VS = `#version 300 es
+precision highp float;
+in vec3 aPos;
+in float aActivity;
+uniform mat4 uMVP;
+out float vAct;
+void main(){
+  gl_Position = uMVP * vec4(aPos, 1.0);
+  vAct = aActivity;
+}`;
+  const EDGE_FS = `#version 300 es
+precision highp float;
+in float vAct;
+out vec4 fragColor;
+void main(){
+  float base = 0.08 + vAct * 0.3;
+  fragColor = vec4(0.0, base, base, base * 1.5);
+}`;
+
+  // Signal program — moving dots
+  const SIG_VS = `#version 300 es
+precision highp float;
+in vec2 aQuad;
+in vec3 aCenter;
+in vec3 aSigCol;
+uniform mat4 uMVP;
+out vec3 vSigCol; out vec2 vUV;
+void main(){
+  vec4 pos = uMVP * vec4(aCenter,1.0);
+  pos.xy += aQuad * 0.018 * pos.w;
+  gl_Position = pos;
+  vSigCol = aSigCol;
+  vUV = aQuad;
+}`;
+  const SIG_FS = `#version 300 es
+precision highp float;
+in vec3 vSigCol; in vec2 vUV;
+out vec4 fragColor;
+void main(){
+  float d = length(vUV);
+  if(d>1.0) discard;
+  float a = (1.0-d*d);
+  fragColor = vec4(mix(vSigCol,vec3(1.0),0.4)*a, a);
+}`;
+
+  const nodeProg  = mkProg(NODE_VS, NODE_FS);
+  const edgeProg  = mkProg(EDGE_VS, EDGE_FS);
+  const sigProg   = mkProg(SIG_VS,  SIG_FS);
+
+  // ── Network data ──────────────────────────────────────────────────────
+  const LAYERS = [6,8,8,6,4];
+  const COLORS = [
+    [0,1,1,1], [0.54,0.17,0.89,0.9], [0.54,0.17,0.89,0.9],
+    [1,0.4,0,0.9], [0,1,0.25,0.9]
+  ];
+  const SEP = 0.22; // layer separation in clip space approx
+
+  // Build nodes
+  const nodes = [];
+  LAYERS.forEach((count, li)=>{
+    const x = (li/(LAYERS.length-1))*2.0 - 1.0;
+    x * 0.85; // use it
+    for(let ni=0;ni<count;ni++){
+      const y = ((ni/(count-1))*2.0-1.0)*0.8;
+      nodes.push({
+        x: (li/(LAYERS.length-1))*1.7-0.85,
+        y,
+        z: (Math.random()-0.5)*0.3,
+        layer:li,
+        idx:ni,
+        activation:0,
+        color:[...COLORS[li]]
+      });
+    }
+  });
+
+  const layerNodes = LAYERS.map((_,li)=>nodes.filter(n=>n.layer===li));
+
+  // Build edges
+  const edgeVerts = [];
+  const edgeActs  = [];
+  const edges     = [];
+  layerNodes.slice(0,-1).forEach((from,li)=>{
+    const to = layerNodes[li+1];
+    from.forEach(fn=>{
+      to.forEach(tn=>{
+        const base = edgeVerts.length/3;
+        edgeVerts.push(fn.x,fn.y,fn.z, tn.x,tn.y,tn.z);
+        edgeActs.push(0,0);
+        edges.push({fn,tn,vBase:base, activity:0});
+      });
+    });
+  });
+
+  // ── WebGL buffers ─────────────────────────────────────────────────────
+  // Quad (shared)
+  const quadVerts = new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]);
+  const quadBuf   = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW);
+
+  // Edge buffer (dynamic)
+  const edgePosBuf = gl.createBuffer();
+  const edgeActBuf = gl.createBuffer();
+
+  // Node instance buffers
+  const nodeCenterBuf = gl.createBuffer();
+  const nodeColorBuf  = gl.createBuffer();
+  const nodeActBuf    = gl.createBuffer();
+
+  // Signal instance buffers (dynamic, max 200 signals)
+  const SIG_MAX = 200;
+  const sigCenterBuf = gl.createBuffer();
+  const sigColBuf    = gl.createBuffer();
+
+  // ── MVP matrix (simple perspective) ───────────────────────────────────
+  function perspective(fov,aspect,near,far){
+    const f=1/Math.tan(fov/2),nf=1/(near-far);
+    return new Float32Array([
+      f/aspect,0,0,0,
+      0,f,0,0,
+      0,0,(far+near)*nf,-1,
+      0,0,2*far*near*nf,0
+    ]);
+  }
+  function mulMat(a,b){
+    const r=new Float32Array(16);
+    for(let i=0;i<4;i++) for(let j=0;j<4;j++){
+      let s=0; for(let k=0;k<4;k++) s+=a[i*4+k]*b[k*4+j];
+      r[i*4+j]=s;
+    }
+    return r;
+  }
+  function translate(x,y,z){
+    return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,x,y,z,1]);
+  }
+
+  const proj = perspective(Math.PI/3, innerWidth/innerHeight, 0.1, 100);
+  const view = translate(0, 0, -2.2);
+  const mvp  = mulMat(proj, view);
+
+  // Set MVP for all programs
+  [nodeProg,edgeProg,sigProg].forEach(p=>{
+    gl.useProgram(p);
+    const loc = gl.getUniformLocation(p,'uMVP');
+    gl.uniformMatrix4fv(loc, false, mvp);
+  });
+
+  // ── Signal system ─────────────────────────────────────────────────────
+  const signals = [];
+  function spawnSignal(fn,tn){
+    if(signals.length>=SIG_MAX) return;
+    signals.push({fn,tn,t:0,speed:0.6+Math.random()*0.6,
+      col:[...fn.color.slice(0,3)]});
+  }
+  function triggerWave(){
+    layerNodes[0].forEach(n=>{
+      n.activation=1.0;
+      layerNodes[1].forEach(tn=>spawnSignal(n,tn));
+    });
+  }
+  triggerWave();
+  if (!reduceMotion) {
+    setInterval(triggerWave,3200);
+    setInterval(()=>{
+      const li=1+Math.floor(Math.random()*(LAYERS.length-2));
+      const n=layerNodes[li][Math.floor(Math.random()*layerNodes[li].length)];
+      n.activation=0.9;
+      if(li<LAYERS.length-1) layerNodes[li+1].forEach(tn=>spawnSignal(n,tn));
+    },1800);
+  }
+
+  // ── Draw helpers ──────────────────────────────────────────────────────
+  function setAttrib(prog, name, buf, data, size, divisor){
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    if(data) gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    const loc=gl.getAttribLocation(prog,name);
+    if(loc<0) return;
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);
+    if(divisor!==undefined) gl.vertexAttribDivisor(loc,divisor);
+  }
+
+  // ── Render loop ───────────────────────────────────────────────────────
+  let last=performance.now();
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    const dt=reduceMotion ? 0 : Math.min((now-last)*0.001,0.05); last=now;
+
+    // ── Update activations ──────────────────────────────────────────
+    nodes.forEach(n=>{ n.activation=Math.max(0,n.activation-dt*1.6); });
+
+    // ── Update signals ──────────────────────────────────────────────
+    for(let i=signals.length-1;i>=0;i--){
+      const s=signals[i];
+      s.t+=dt*s.speed;
+      if(s.t>=1){
+        s.tn.activation=1.0;
+        if(s.tn.layer<LAYERS.length-1)
+          layerNodes[s.tn.layer+1].forEach(tn=>spawnSignal(s.tn,tn));
+        signals.splice(i,1);
+      }
+    }
+
+    // ── Update edge activities ──────────────────────────────────────
+    edges.forEach(e=>{ e.activity=Math.max(e.fn.activation,e.tn.activation)*0.5; });
+
+    // ── GL state ────────────────────────────────────────────────────
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.clearColor(0.039,0.031,0.071,1);
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+    gl.disable(gl.DEPTH_TEST);
+
+    // ── Draw edges ──────────────────────────────────────────────────
+    gl.useProgram(edgeProg);
+    const edgePosData = new Float32Array(edgeVerts);
+    const edgeActData = new Float32Array(edgeActs.length);
+    edges.forEach((e,i)=>{
+      edgeActData[i*2]=edgeActData[i*2+1]=e.activity;
+    });
+    setAttrib(edgeProg,'aPos',   edgePosBuf, edgePosData, 3);
+    setAttrib(edgeProg,'aActivity',edgeActBuf,edgeActData, 1);
+    gl.drawArrays(gl.LINES, 0, edgeVerts.length/3);
+
+    // ── Draw nodes (instanced) ──────────────────────────────────────
+    gl.useProgram(nodeProg);
+    const nc=new Float32Array(nodes.flatMap(n=>[n.x,n.y,n.z]));
+    const nCol=new Float32Array(nodes.flatMap(n=>[...n.color.slice(0,3),0.12]));
+    const nAct=new Float32Array(nodes.map(n=>n.activation));
+
+    const vao=gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    setAttrib(nodeProg,'aQuad',  quadBuf,       null, 2, 0);
+    setAttrib(nodeProg,'aCenter',nodeCenterBuf,  nc,   3, 1);
+    setAttrib(nodeProg,'aColor', nodeColorBuf,   nCol, 4, 1);
+    setAttrib(nodeProg,'aActivation',nodeActBuf, nAct, 1, 1);
+    gl.drawArraysInstanced(gl.TRIANGLES,0,6,nodes.length);
+
+    // ── Draw signals (instanced) ────────────────────────────────────
+    if(signals.length>0){
+      gl.useProgram(sigProg);
+      const sc=new Float32Array(signals.flatMap(s=>{
+        const x=s.fn.x+(s.tn.x-s.fn.x)*s.t;
+        const y=s.fn.y+(s.tn.y-s.fn.y)*s.t;
+        const z=s.fn.z+(s.tn.z-s.fn.z)*s.t;
+        return[x,y,z];
+      }));
+      const sCol=new Float32Array(signals.flatMap(s=>s.col));
+      const vao2=gl.createVertexArray();
+      gl.bindVertexArray(vao2);
+      setAttrib(sigProg,'aQuad',  quadBuf,   null, 2, 0);
+      setAttrib(sigProg,'aCenter',sigCenterBuf,sc,  3, 1);
+      setAttrib(sigProg,'aSigCol',sigColBuf,  sCol, 3, 1);
+      gl.drawArraysInstanced(gl.TRIANGLES,0,6,signals.length);
+    }
+  }
+  requestAnimationFrame(frame);
+
+  window.addEventListener('resize',()=>{
+    canvas.width  = innerWidth  * Math.min(devicePixelRatio,2);
+    canvas.height = innerHeight * Math.min(devicePixelRatio,2);
+    canvas.style.width  = innerWidth+'px';
+    canvas.style.height = innerHeight+'px';
+  });
+  </script>
+</body>
+</html>

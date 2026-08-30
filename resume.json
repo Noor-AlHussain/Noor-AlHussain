@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/master/schema.json",
+  "basics": {
+    "name": "Noor AlHussain",
+    "label": "Security Researcher & Software Engineer",
+    "image": "",
+    "email": "noorhack.work@gmail.com",
+    "url": "https://noor-alhussain.github.io/Noor-AlHussain/",
+    "summary": "Security researcher and software engineer working across systems-level and web technologies — offensive security research, tool development, kernel/OS internals, compiler construction, and AI systems.",
+    "location": {
+      "countryCode": "IQ",
+      "region": "Republic of Iraq"
+    },
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "Noor-AlHussain",
+        "url": "https://github.com/Noor-AlHussain"
+      },
+      {
+        "network": "X",
+        "username": "NoorHack",
+        "url": "https://x.com/NoorHack"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "Noor-AlHussain",
+        "url": "https://www.linkedin.com/in/Noor-AlHussain"
+      }
+    ]
+  },
+  "work": [],
+  "volunteer": [],
+  "education": [],
+  "awards": [],
+  "certificates": [],
+  "publications": [],
+  "skills": [
+    {
+      "name": "Kernel & Systems",
+      "level": "Advanced",
+      "keywords": ["C", "C++", "Assembly", "Linux Kernel", "GDB/LLDB", "QEMU/KVM"]
+    },
+    {
+      "name": "Security Research",
+      "level": "Advanced",
+      "keywords": ["Reverse Engineering", "Exploit Development", "Vulnerability Research", "Binary Analysis", "Ghidra", "IDA Pro"]
+    },
+    {
+      "name": "AI & Machine Learning",
+      "level": "Intermediate",
+      "keywords": ["Python", "PyTorch", "TensorFlow", "Whisper/ASR", "CUDA", "Fine-tuning"]
+    },
+    {
+      "name": "Web & Mobile",
+      "level": "Advanced",
+      "keywords": ["React", "FastAPI", "Flutter", "TypeScript", "WebGL/GLSL", "WebGPU"]
+    },
+    {
+      "name": "Hardware & Firmware",
+      "level": "Intermediate",
+      "keywords": ["JTAG/SWD", "UEFI/BIOS", "Firmware RE", "Side-Channel Analysis", "Fault Injection", "Embedded/MCU"]
+    },
+    {
+      "name": "Language & Compiler Design",
+      "level": "Intermediate",
+      "keywords": ["Compiler Design", "Rust", "LLVM IR", "WASM/WASI", "GLSL/WGSL", "Lexer/Parser Construction"]
+    }
+  ],
+  "languages": [
+    { "language": "Arabic", "fluency": "Native speaker" },
+    { "language": "English", "fluency": "Professional working proficiency" }
+  ],
+  "interests": [
+    {
+      "name": "Systems Security",
+      "keywords": ["Memory safety", "Side-channel analysis", "Compiler construction"]
+    },
+    {
+      "name": "Computational Theory",
+      "keywords": ["P vs NP", "SAT solving", "Algorithm design"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Noor-AlHussain GitHub Profile",
+      "description": "A multi-engine interactive portfolio: Babylon.js PBR, WebGPU compute shaders, raw WebGL2 GLSL ES 3.0, OGL, and a Rust-to-WASM void-engine, alongside functional tools (a hand-written compiler pipeline, a DPLL SAT solver, a memory-safety visualizer, and a real in-browser timing side-channel demo) with a full CI/CD pipeline including Sigstore-backed build attestations.",
+      "highlights": [
+        "Real GitHub Artifact Attestations (Sigstore/Fulcio/Rekor) for build provenance, not just a self-signed hash",
+        "A working toy-language compiler — lexer, recursive-descent parser, bytecode VM — runnable and steppable in the browser",
+        "Automated CI: daily stats refresh, visual regression testing, Lighthouse CI, Dependabot"
+      ],
+      "keywords": ["WebGPU", "Rust", "Babylon.js", "Compilers", "Security"],
+      "url": "https://github.com/Noor-AlHussain/Noor-AlHussain",
+      "type": "application"
+    }
+  ],
+  "meta": {
+    "canonical": "https://raw.githubusercontent.com/Noor-AlHussain/Noor-AlHussain/main/resume.json",
+    "version": "v1.0.0",
+    "note": "Work history, education, and certificates are intentionally left empty — this file ships with real, verifiable structure rather than placeholder entries. Fill in actual history before publishing to a resume registry."
+  }
+}

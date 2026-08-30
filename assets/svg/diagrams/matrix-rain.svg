@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 120" width="900" height="120">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg { fill: #0a0812; }
+      .col {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 13px;
+        fill: #00ff41;
+        letter-spacing: 0;
+        writing-mode: vertical-rl;
+        animation: rain-fall linear infinite;
+        opacity: 0;
+      }
+      .col-head {
+        fill: #ffffff;
+      }
+      /* Each column gets different duration and delay */
+      .c00 { animation-duration: 1.8s; animation-delay: 0.0s; }
+      .c01 { animation-duration: 2.1s; animation-delay: 0.3s; }
+      .c02 { animation-duration: 1.6s; animation-delay: 0.7s; }
+      .c03 { animation-duration: 2.4s; animation-delay: 0.1s; }
+      .c04 { animation-duration: 1.9s; animation-delay: 0.5s; }
+      .c05 { animation-duration: 2.2s; animation-delay: 0.9s; }
+      .c06 { animation-duration: 1.7s; animation-delay: 0.2s; }
+      .c07 { animation-duration: 2.0s; animation-delay: 0.6s; }
+      .c08 { animation-duration: 1.5s; animation-delay: 0.4s; }
+      .c09 { animation-duration: 2.3s; animation-delay: 0.8s; }
+      .c10 { animation-duration: 1.8s; animation-delay: 0.15s; }
+      .c11 { animation-duration: 2.1s; animation-delay: 0.55s; }
+      .c12 { animation-duration: 1.6s; animation-delay: 0.95s; }
+      .c13 { animation-duration: 2.4s; animation-delay: 0.25s; }
+      .c14 { animation-duration: 1.9s; animation-delay: 0.65s; }
+      .c15 { animation-duration: 2.2s; animation-delay: 0.35s; }
+      .c16 { animation-duration: 1.7s; animation-delay: 0.75s; }
+      .c17 { animation-duration: 2.0s; animation-delay: 0.45s; }
+      .c18 { animation-duration: 1.5s; animation-delay: 0.85s; }
+      .c19 { animation-duration: 2.3s; animation-delay: 0.05s; }
+      .c20 { animation-duration: 1.8s; animation-delay: 0.50s; }
+      .c21 { animation-duration: 2.1s; animation-delay: 0.20s; }
+      .c22 { animation-duration: 1.6s; animation-delay: 0.60s; }
+      .c23 { animation-duration: 2.4s; animation-delay: 0.40s; }
+      .c24 { animation-duration: 1.9s; animation-delay: 0.80s; }
+      .c25 { animation-duration: 2.2s; animation-delay: 0.10s; }
+      .c26 { animation-duration: 1.7s; animation-delay: 0.70s; }
+      .c27 { animation-duration: 2.0s; animation-delay: 0.30s; }
+      .c28 { animation-duration: 1.5s; animation-delay: 0.90s; }
+      .c29 { animation-duration: 2.3s; animation-delay: 0.60s; }
+
+      @keyframes rain-fall {
+        0%   { transform: translateY(-120px); opacity: 0; }
+        10%  { opacity: 0.8; }
+        80%  { opacity: 0.6; }
+        100% { transform: translateY(120px);  opacity: 0; }
+      }
+    </style>
+  </defs>
+
+  <rect class="bg" width="900" height="120"/>
+
+  <!-- 30 columns, each 30px wide, with ATCG sequence text -->
+  <text class="col c00" x="0"   y="-10">ATCGATCGATCG</text>
+  <text class="col c01" x="30"  y="-10">GCTAGCTAGCTA</text>
+  <text class="col c02" x="60"  y="-10">TACGTACGTACG</text>
+  <text class="col c03" x="90"  y="-10">CGTAGCTAGCTA</text>
+  <text class="col c04" x="120" y="-10">ATGCATGCATGC</text>
+  <text class="col c05" x="150" y="-10">GCTAATCGGCTA</text>
+  <text class="col c06" x="180" y="-10">TACGATCGTACG</text>
+  <text class="col c07" x="210" y="-10">ATAGCTATAGCT</text>
+  <text class="col c08" x="240" y="-10">CGCGATCGATCG</text>
+  <text class="col c09" x="270" y="-10">TAGCTAGCTAGC</text>
+  <text class="col c10" x="300" y="-10">ATCGATCGATCG</text>
+  <text class="col c11" x="330" y="-10">GCATGCATGCAT</text>
+  <text class="col c12" x="360" y="-10">TACGCGATCGTA</text>
+  <text class="col c13" x="390" y="-10">ATCGGCTATCGG</text>
+  <text class="col c14" x="420" y="-10">GCTAATCGGCTA</text>
+  <text class="col c15" x="450" y="-10">CGTAGCTAGCTA</text>
+  <text class="col c16" x="480" y="-10">ATGCGCTATGCG</text>
+  <text class="col c17" x="510" y="-10">TACGTACGATCG</text>
+  <text class="col c18" x="540" y="-10">GCTAGCTAATCG</text>
+  <text class="col c19" x="570" y="-10">ATCGATCGGCTA</text>
+  <text class="col c20" x="600" y="-10">CGCGATCGATCG</text>
+  <text class="col c21" x="630" y="-10">TACGCGATCGTA</text>
+  <text class="col c22" x="660" y="-10">ATCGGCTATCGG</text>
+  <text class="col c23" x="690" y="-10">GCTAATCGGCTA</text>
+  <text class="col c24" x="720" y="-10">CGTAGCTAGCTA</text>
+  <text class="col c25" x="750" y="-10">ATCGATCGATCG</text>
+  <text class="col c26" x="780" y="-10">GCATGCATGCAT</text>
+  <text class="col c27" x="810" y="-10">TACGCGATCGTA</text>
+  <text class="col c28" x="840" y="-10">ATCGGCTATCGG</text>
+  <text class="col c29" x="870" y="-10">GCTAATCGGCTA</text>
+
+  <!-- Fade overlay top and bottom -->
+  <defs>
+    <linearGradient id="fade-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#0a0812" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#0a0812" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fade-bot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="60%" stop-color="#0a0812" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0812" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="120" fill="url(#fade-top)"/>
+  <rect width="900" height="120" fill="url(#fade-bot)"/>
+</svg>
