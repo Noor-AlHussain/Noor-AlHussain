@@ -115,7 +115,7 @@ jobs:
           [ -d assets/previews ] && cp -r assets/previews/. dist/previews/ 2>/dev/null || true
 
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
