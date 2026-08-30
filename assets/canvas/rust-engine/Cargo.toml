@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 wgpu        = { version = "0.19", default-features = false, features = ["webgpu", "webgl"] }
-winit       = { version = "0.29", default-features = false }
+winit       = { version = "0.30", default-features = false }
 bytemuck    = { version = "1.14", features = ["derive"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
