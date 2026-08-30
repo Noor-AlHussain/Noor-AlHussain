@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-wgpu        = { version = "0.19", default-features = false, features = ["webgpu", "webgl"] }
+wgpu        = { version = "30.0", default-features = false, features = ["webgpu", "webgl"] }
 winit       = { version = "0.29", default-features = false }
 bytemuck    = { version = "1.14", features = ["derive"] }
 wasm-bindgen = "0.2"
