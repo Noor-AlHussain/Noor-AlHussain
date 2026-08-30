@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Generate snake animation
         uses: Platane/snk/svg-only@v3
@@ -45,7 +45,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v5
         with:
@@ -82,7 +82,7 @@ jobs:
     # Don't fail entire pipeline if WakaTime key is missing
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v5
         with:
@@ -114,7 +114,7 @@ jobs:
       attestations: write    # required to publish the attestation to GitHub's store
     needs: [update-snake, update-stats]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: main
 
@@ -176,7 +176,7 @@ jobs:
     needs: [update-snake, update-stats, update-wakatime, inject-easter-eggs]
     if: always() && !cancelled()
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: main
 
