@@ -1,0 +1,64 @@
+name: Render 3D Scene Previews
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"    # Every Sunday at 02:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: render-previews
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    name: Render Scene Previews via Puppeteer (APNG)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Puppeteer browser
+        run: npx puppeteer browsers install chrome
+
+      - name: Build skills data
+        run: node scripts/build-skills-json.js
+
+      - name: Assemble local pages server
+        run: |
+          mkdir -p dist-render
+          cp -r assets/canvas/atom-3d        dist-render/atom
+          cp -r assets/canvas/dna-3d         dist-render/dna
+          cp -r assets/canvas/particle-field dist-render/particles
+          cp -r assets/canvas/skill-universe dist-render/universe
+          cp -r assets/canvas/hologram-cube  dist-render/hologram
+          cp -r assets/canvas/neural-net     dist-render/neural
+          cp -r assets/canvas/wormhole       dist-render/wormhole
+          cp -r assets/canvas/cpu-die        dist-render/cpu
+          npx serve dist-render -p 3000 &
+          sleep 4
+
+      # WebGPU (used by the particle-field scene) requires Chrome's
+      # unsafe-webgpu flag plus a software GL fallback in headless CI —
+      # these are passed inside render-3d.js's puppeteer.launch() args.
+      - name: Render all scenes to animated APNG
+        run: node scripts/render-3d.js
+        env:
+          PAGES_URL: http://localhost:3000
+        continue-on-error: true   # partial failures shouldn't block other scenes' commits
+
+      - name: Commit previews
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "assets/previews/ assets/generated/preview-*.png"
+          message: "ci: update 3D scene previews [skip ci]"
+          default_author: github_actions

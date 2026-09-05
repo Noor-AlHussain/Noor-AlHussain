@@ -1,0 +1,50 @@
+name: Check Rust Engine
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/canvas/rust-engine/**"
+  pull_request:
+    paths:
+      - "assets/canvas/rust-engine/**"
+  workflow_dispatch:
+
+concurrency:
+  group: check-rust-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: cargo check + clippy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: assets/canvas/rust-engine
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            assets/canvas/rust-engine/target
+          key: ${{ runner.os }}-cargo-check-${{ hashFiles('assets/canvas/rust-engine/Cargo.lock') }}
+
+      # Fast feedback — type-checks against the wasm32 target without
+      # the full wasm-bindgen/wasm-opt pass that deploy-pages.yml does.
+      - name: cargo check (wasm32 target)
+        run: cargo check --target wasm32-unknown-unknown
+
+      - name: cargo clippy
+        run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+        continue-on-error: true   # advisory — doesn't block deploys over lint nits

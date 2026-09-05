@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg  { fill: #0a0812; }
+      .label {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 10px;
+        fill: rgba(0,255,255,0.35);
+        letter-spacing: 0.2em;
+      }
+      /* Strand glow pulse */
+      .strand-a {
+        fill: none; stroke: #00ffff; stroke-width: 2.8;
+        stroke-linecap: round; stroke-linejoin: round;
+        animation: pulse-a 3s ease-in-out infinite;
+      }
+      .strand-b {
+        fill: none; stroke: #8a2be2; stroke-width: 2.8;
+        stroke-linecap: round; stroke-linejoin: round;
+        animation: pulse-b 3s ease-in-out infinite 1.5s;
+      }
+      @keyframes pulse-a {
+        0%,100% { filter: drop-shadow(0 0 3px rgba(0,255,255,0.4)); }
+        50%      { filter: drop-shadow(0 0 9px rgba(0,255,255,0.9)); }
+      }
+      @keyframes pulse-b {
+        0%,100% { filter: drop-shadow(0 0 3px rgba(138,43,226,0.4)); }
+        50%      { filter: drop-shadow(0 0 9px rgba(138,43,226,0.9)); }
+      }
+      /* Base draw-in */
+      .base-pair {
+        stroke-dasharray: 120;
+        stroke-dashoffset: 120;
+        animation: pair-draw 0.6s ease-out forwards;
+      }
+      /* The two traveling signal dots use SMIL (animateMotion), a
+         separate animation system the block above cannot reach — hidden
+         outright under reduced motion instead. Both strands, all eight
+         base pairs, and every nucleotide marker are plain, non-animated
+         content and stay fully visible either way — the dots are an
+         added signal-flow indicator layered on top of an already-
+         complete helix, not part of the structure itself. */
+      @media (prefers-reduced-motion: reduce) {
+        .reduced-motion-hide { display: none; }
+      }
+    </style>
+
+    <filter id="glow-a" x="-30%" y="-5%" width="160%" height="110%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-node" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-travel" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!--
+      DNA strands as cubic bezier paths.
+      Sine wave: x = 200 ± 80*sin(t), y from 20 to 380.
+      Control points computed to match sine curvature.
+
+      Strand A: starts right (360,20), curves through midpoints
+      Strand B: starts left  (40,20),  offset by PI
+    -->
+    <!-- Strand A path for animateMotion -->
+    <path id="strand-a-path"
+      d="M 280,20
+         C 360,60  360,100 280,140
+         C 200,180 200,180 120,220
+         C 40,260  40,300  120,340
+         C 200,380 200,380 280,380"/>
+
+    <!-- Strand B path (mirrored) -->
+    <path id="strand-b-path"
+      d="M 120,20
+         C 40,60   40,100  120,140
+         C 200,180 200,180 280,220
+         C 360,260 360,300 280,340
+         C 200,380 200,380 120,380"/>
+  </defs>
+
+  <rect class="bg" width="400" height="400"/>
+  <line x1="200" y1="0" x2="200" y2="400" stroke="rgba(0,255,255,0.03)" stroke-width="1"/>
+
+  <!-- Strand A — cubic bezier -->
+  <path class="strand-a"
+    d="M 280,20
+       C 360,60  360,100 280,140
+       C 200,180 200,180 120,220
+       C 40,260  40,300  120,340
+       C 200,380 200,380 280,380"/>
+
+  <!-- Strand B — cubic bezier -->
+  <path class="strand-b"
+    d="M 120,20
+       C 40,60   40,100  120,140
+       C 200,180 200,180 280,220
+       C 360,260 360,300 280,340
+       C 200,380 200,380 120,380"/>
+
+  <!-- ── Base pairs — tilted to follow helix ── -->
+  <!-- Pair 1 — y≈60, A at right, B at left -->
+  <line stroke="#00ff41" stroke-width="1.8" x1="320" y1="56" x2="80" y2="56" opacity="0.8" filter="url(#glow-a)"/>
+  <circle cx="320" cy="56" r="6" fill="#00ff41" filter="url(#glow-node)"/>
+  <circle cx="80"  cy="56" r="6" fill="#00ff41" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 2 — y≈100 crossover area -->
+  <line stroke="#ff6600" stroke-width="1.8" x1="348" y1="100" x2="52" y2="100" opacity="0.8"/>
+  <circle cx="348" cy="100" r="5" fill="#ff6600" filter="url(#glow-node)"/>
+  <circle cx="52"  cy="100" r="5" fill="#ff6600" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 3 — y≈140 -->
+  <line stroke="#00ffff" stroke-width="1.8" x1="280" y1="140" x2="120" y2="140" opacity="0.8" filter="url(#glow-a)"/>
+  <circle cx="280" cy="140" r="6" fill="#00ffff" filter="url(#glow-node)"/>
+  <circle cx="120" cy="140" r="6" fill="#00ffff" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 4 — y≈180 (center crossover) -->
+  <line stroke="#ff003c" stroke-width="1.8" x1="200" y1="180" x2="200" y2="180" opacity="0.8"/>
+  <circle cx="200" cy="180" r="5" fill="#ff003c" filter="url(#glow-node)"/>
+
+  <!-- Pair 5 — y≈220 -->
+  <line stroke="#00ff41" stroke-width="1.8" x1="120" y1="220" x2="280" y2="220" opacity="0.8"/>
+  <circle cx="120" cy="220" r="6" fill="#00ff41" filter="url(#glow-node)"/>
+  <circle cx="280" cy="220" r="6" fill="#00ff41" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 6 — y≈260 -->
+  <line stroke="#ff6600" stroke-width="1.8" x1="52" y1="260" x2="348" y2="260" opacity="0.8"/>
+  <circle cx="52"  cy="260" r="5" fill="#ff6600" filter="url(#glow-node)"/>
+  <circle cx="348" cy="260" r="5" fill="#ff6600" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 7 — y≈300 -->
+  <line stroke="#00ffff" stroke-width="1.8" x1="120" y1="300" x2="280" y2="300" opacity="0.8" filter="url(#glow-a)"/>
+  <circle cx="120" cy="300" r="6" fill="#00ffff" filter="url(#glow-node)"/>
+  <circle cx="280" cy="300" r="6" fill="#00ffff" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- Pair 8 — y≈340 -->
+  <line stroke="#ff003c" stroke-width="1.8" x1="120" y1="340" x2="280" y2="340" opacity="0.8"/>
+  <circle cx="120" cy="340" r="5" fill="#ff003c" filter="url(#glow-node)"/>
+  <circle cx="280" cy="340" r="5" fill="#ff003c" opacity="0.7" filter="url(#glow-node)"/>
+
+  <!-- ── Traveling nucleotide signal on strand A ── -->
+  <circle class="reduced-motion-hide" r="5" fill="#ffffff" opacity="0.9" filter="url(#glow-travel)">
+    <animateMotion dur="4s" repeatCount="indefinite">
+      <mpath href="#strand-a-path"/>
+    </animateMotion>
+  </circle>
+
+  <!-- ── Traveling signal on strand B (opposite direction) ── -->
+  <circle class="reduced-motion-hide" r="4" fill="#cc88ff" opacity="0.85" filter="url(#glow-travel)">
+    <animateMotion dur="5s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
+      <mpath href="#strand-b-path"/>
+    </animateMotion>
+  </circle>
+
+  <!-- Legend -->
+  <rect x="296" y="60" width="8" height="8" fill="#00ff41" opacity="0.8"/>
+  <text x="308" y="69" class="label" style="font-size:9px">A-T</text>
+  <rect x="296" y="76" width="8" height="8" fill="#ff6600" opacity="0.8"/>
+  <text x="308" y="85" class="label" style="font-size:9px">G-C</text>
+
+  <!-- Labels -->
+  <text class="label" x="16" y="22">// DNA HELIX</text>
+  <text class="label" x="16" y="390">DOUBLE STRAND</text>
+</svg>

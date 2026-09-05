@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Particle Field — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    canvas{display:block;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;
+      align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+    #fallback p{font-family:'Share Tech Mono',monospace;color:rgba(0,255,255,0.6);
+      letter-spacing:.2em;font-size:12px;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">WEBGPU — COMPUTE SHADERS</div>
+  <div id="label">// THE VOID — 1M PARTICLE GPU COMPUTE — MOVE MOUSE</div>
+  <canvas id="c" role="img" aria-label="Interactive particle field of one million GPU-simulated particles orbiting and drifting in response to mouse movement, rendered with WebGPU compute shaders"></canvas>
+  <div id="fallback">
+    <p>WebGPU not available in this browser.</p>
+    <p>Supported on Chrome/Edge 113+, Safari 26+ (macOS Tahoe/iOS 26+),<br/>and Firefox on Windows since v141. Firefox on Linux/Android and<br/>older Safari versions don't have it enabled yet.</p>
+  </div>
+
+  <script>
+  'use strict';
+
+  const COUNT = 1_000_000;
+
+  async function init(){
+    if(!navigator.gpu){
+      document.getElementById('fallback').style.display='flex';
+      return;
+    }
+
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference:'high-performance' });
+    if(!adapter){ document.getElementById('fallback').style.display='flex'; return; }
+
+    const device  = await adapter.requestDevice({
+      requiredLimits:{
+        maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
+        maxBufferSize:               adapter.limits.maxBufferSize,
+      }
+    });
+
+    const canvas  = document.getElementById('c');
+    canvas.width  = innerWidth  * Math.min(devicePixelRatio,2);
+    canvas.height = innerHeight * Math.min(devicePixelRatio,2);
+    canvas.style.width  = innerWidth+'px';
+    canvas.style.height = innerHeight+'px';
+
+    const ctx = canvas.getContext('webgpu');
+    const fmt = navigator.gpu.getPreferredCanvasFormat();
+    ctx.configure({ device, format:fmt, alphaMode:'premultiplied' });
+
+    // ── Particle data: [x,y,z,vx,vy,vz,r,g,b,life] × COUNT ────────────
+    const STRIDE = 10;
+    const initData = new Float32Array(COUNT * STRIDE);
+
+    for(let i=0;i<COUNT;i++){
+      const b=i*STRIDE;
+      const r=8+Math.random()*8, t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1);
+      initData[b+0]=r*Math.sin(p)*Math.cos(t);  // x
+      initData[b+1]=r*Math.sin(p)*Math.sin(t);  // y
+      initData[b+2]=r*Math.cos(p);               // z
+      initData[b+3]=(Math.random()-.5)*.02;      // vx
+      initData[b+4]=(Math.random()-.5)*.02;      // vy
+      initData[b+5]=(Math.random()-.5)*.02;      // vz
+      // Color: 70% cyan, 20% violet, 10% green
+      const rnd=Math.random();
+      if(rnd<.70){initData[b+6]=0;initData[b+7]=1;initData[b+8]=1;}
+      else if(rnd<.90){initData[b+6]=.54;initData[b+7]=.17;initData[b+8]=.89;}
+      else{initData[b+6]=0;initData[b+7]=1;initData[b+8]=.25;}
+      initData[b+9]=Math.random();               // phase/life
+    }
+
+    const particleBuf = device.createBuffer({
+      size:  initData.byteLength,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(particleBuf, 0, initData);
+
+    // Uniforms
+    const uniformBuf = device.createBuffer({
+      size: 32, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+
+    // ── Compute shader — WGSL ───────────────────────────────────────────
+    const computeModule = device.createShaderModule({ code:`
+struct Particle {
+  pos  : vec3<f32>,
+  vel  : vec3<f32>,
+  col  : vec3<f32>,
+  life : f32,
+}
+struct Uniforms {
+  time   : f32,
+  dt     : f32,
+  mouseX : f32,
+  mouseY : f32,
+}
+@group(0) @binding(0) var<storage,read_write> particles: array<Particle>;
+@group(0) @binding(1) var<uniform> u: Uniforms;
+
+fn hash3(p: vec3<f32>) -> vec3<f32> {
+  var q = fract(p * vec3<f32>(443.897,441.423,437.195));
+  q += dot(q, q.yzx + 19.19);
+  return fract((q.xxy + q.yxx) * q.zyx);
+}
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+  let i = id.x;
+  if(i >= ${COUNT}u) { return; }
+
+  var p = particles[i];
+
+  // Noise-based drift
+  let n = hash3(p.pos * 0.08 + vec3<f32>(u.time*0.12));
+  p.vel += (n - 0.5) * 0.004;
+
+  // Gravity toward center
+  p.vel -= p.pos * 0.0018;
+
+  // Mouse repulsion in XY plane
+  let mpos = vec3<f32>(u.mouseX*20.0-10.0, u.mouseY*20.0-10.0, 0.0);
+  let dm   = p.pos - mpos;
+  let md   = length(dm);
+  if(md < 5.0) {
+    p.vel += normalize(dm + vec3<f32>(0.001)) * (5.0/(md*md+0.5)) * 0.08;
+  }
+
+  // Damping
+  p.vel *= 0.96;
+
+  // Integrate
+  p.pos += p.vel;
+
+  // Clamp to sphere
+  let r = length(p.pos);
+  if(r > 16.0) { p.pos = normalize(p.pos) * 16.0; p.vel *= -0.3; }
+
+  particles[i] = p;
+}
+`});
+
+    const computePipeline = device.createComputePipeline({
+      layout:'auto',
+      compute: { module:computeModule, entryPoint:'main' }
+    });
+
+    // ── Render shader — WGSL ────────────────────────────────────────────
+    const renderModule = device.createShaderModule({ code:`
+struct VSOut { @builtin(position) pos: vec4<f32>, @location(0) col: vec3<f32>, @location(1) life: f32 }
+struct Uniforms { time:f32, dt:f32, mouseX:f32, mouseY:f32 }
+@group(0) @binding(1) var<uniform> u: Uniforms;
+
+@vertex fn vs(
+  @location(0) pos  : vec3<f32>,
+  @location(1) vel  : vec3<f32>,
+  @location(2) col  : vec3<f32>,
+  @location(3) life : f32,
+  @builtin(vertex_index) vi: u32
+) -> VSOut {
+  // Slow camera orbit
+  let ang = u.time * 0.05;
+  let ca = cos(ang); let sa = sin(ang);
+  let rp = vec3<f32>(pos.x*ca-pos.z*sa, pos.y, pos.x*sa+pos.z*ca);
+
+  // Perspective projection
+  let fov = 0.7;
+  let Z = rp.z + 22.0;
+  let sc = fov / Z;
+  let aspect = 1920.0/1080.0;
+
+  let pulsate = 0.5 + 0.5*sin(u.time*2.0+life*6.28318);
+
+  var out: VSOut;
+  out.pos  = vec4<f32>(rp.x*sc/aspect, rp.y*sc, 0.0, 1.0);
+  out.col  = col;
+  out.life = pulsate;
+  return out;
+}
+
+@fragment fn fs(in: VSOut) -> @location(0) vec4<f32> {
+  let a = in.life * 0.9;
+  let bright = mix(in.col, vec3<f32>(1.0), in.life*0.3);
+  return vec4<f32>(bright * a, a);
+}
+`});
+
+    const renderPipeline = device.createRenderPipeline({
+      layout:'auto',
+      vertex:{
+        module: renderModule, entryPoint:'vs',
+        buffers:[{
+          arrayStride: 10*4,
+          attributes:[
+            {shaderLocation:0,offset:0, format:'float32x3'},
+            {shaderLocation:1,offset:12,format:'float32x3'},
+            {shaderLocation:2,offset:24,format:'float32x3'},
+            {shaderLocation:3,offset:36,format:'float32'},
+          ]
+        }]
+      },
+      fragment:{
+        module:renderModule, entryPoint:'fs',
+        targets:[{
+          format:fmt,
+          blend:{ color:{srcFactor:'src-alpha',dstFactor:'one',operation:'add'},
+                  alpha:{srcFactor:'one',dstFactor:'one',operation:'add'} }
+        }]
+      },
+      primitive:{ topology:'point-list' },
+    });
+
+    // ── Bind groups ─────────────────────────────────────────────────────
+    const computeBG = device.createBindGroup({
+      layout: computePipeline.getBindGroupLayout(0),
+      entries:[
+        {binding:0,resource:{buffer:particleBuf}},
+        {binding:1,resource:{buffer:uniformBuf}},
+      ]
+    });
+    const renderBG = device.createBindGroup({
+      layout: renderPipeline.getBindGroupLayout(0),
+      entries:[{binding:1,resource:{buffer:uniformBuf}}]
+    });
+
+    // ── Mouse ────────────────────────────────────────────────────────────
+    let mxT=0.5,myT=0.5,mxC=0.5,myC=0.5;
+    window.addEventListener('mousemove',e=>{mxT=e.clientX/innerWidth;myT=1-e.clientY/innerHeight;});
+    window.addEventListener('touchmove',e=>{
+      mxT=e.touches[0].clientX/innerWidth;myT=1-e.touches[0].clientY/innerHeight;
+    },{passive:true});
+
+    // ── Render loop ──────────────────────────────────────────────────────
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let t0=performance.now(), lastT=t0;
+    const uData=new Float32Array(8);
+
+    function frame(now){
+      requestAnimationFrame(frame);
+      const t=reduceMotion ? 0 : (now-t0)*0.001, dt=reduceMotion ? 0 : Math.min((now-lastT)*0.001,0.05); lastT=now;
+
+      mxC+=(mxT-mxC)*0.055; myC+=(myT-myC)*0.055;
+
+      uData[0]=t; uData[1]=dt; uData[2]=mxC; uData[3]=myC;
+      device.queue.writeBuffer(uniformBuf,0,uData.buffer,0,32);
+
+      const enc  = device.createCommandEncoder();
+
+      // Compute pass — update particles on GPU
+      const cp = enc.beginComputePass();
+      cp.setPipeline(computePipeline);
+      cp.setBindGroup(0,computeBG);
+      cp.dispatchWorkgroups(Math.ceil(COUNT/64));
+      cp.end();
+
+      // Render pass — draw points
+      const rp = enc.beginRenderPass({
+        colorAttachments:[{
+          view:ctx.getCurrentTexture().createView(),
+          clearValue:{r:.039,g:.031,b:.071,a:1},
+          loadOp:'clear', storeOp:'store'
+        }]
+      });
+      rp.setPipeline(renderPipeline);
+      rp.setBindGroup(0,renderBG);
+      rp.setVertexBuffer(0,particleBuf);
+      rp.draw(COUNT);
+      rp.end();
+
+      device.queue.submit([enc.finish()]);
+    }
+    requestAnimationFrame(frame);
+
+    window.addEventListener('resize',()=>{
+      canvas.width  = innerWidth  * Math.min(devicePixelRatio,2);
+      canvas.height = innerHeight * Math.min(devicePixelRatio,2);
+      canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px';
+      ctx.configure({device,format:fmt,alphaMode:'premultiplied'});
+    });
+  }
+
+  init().catch(e=>{
+    console.error(e);
+    document.getElementById('fallback').style.display='flex';
+  });
+  </script>
+</body>
+</html>

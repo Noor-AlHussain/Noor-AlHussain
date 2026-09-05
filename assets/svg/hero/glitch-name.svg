@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 160" width="900" height="160">
+  <metadata>
+  <!-- Easter Egg 1 (Base64): SWYgeW91IGFyZSByZWFkaW5nIHRoaXMsIHlvdSBrbm93IGhvdyB0byBsb29rIGJlbmVhdGggdGhlIHN1cmZhY2UuIFRoYXQgaXMgdGhlIGZpcnN0IHJlcXVpcmVtZW50LiBJZGVudGl0eTogTm9vciBBbEh1c3NhaW4g4oCUIGdpdGh1Yi5jb20vTm9vci1BbEh1c3NhaW4gU3RhY2s6IFNpbGljb24gdG8gQUkuIE5vIGxheWVyIHVudG91Y2hlZC4= -->
+  <!-- Easter Egg 2 (Hex challenge): Decode this: 4e6f6f7220416c487573736169 6e202d204e6f6f7248 61636b -->
+  <!-- Integrity: see assets/integrity-manifest.asc for real, verifiable SHA-256 checksums -->
+  <!-- Hint: The answer is in the commit history. -->
+</metadata>
+<defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      /* Two separate SMIL fixes, since CSS animation-duration above only
+         reaches CSS Animations/Transitions and has no effect on SMIL:
+         the RGB-split flash layers are hidden outright (they rest at
+         opacity 0 anyway when not actively flashing, so this matches
+         their own resting state); the main name text keeps the glow but
+         drops the feTurbulence/feDisplacementMap distortion chain via a
+         CSS filter override, since hiding the text itself isn't an
+         option — it's the only always-visible copy of the name. This is
+         a plain, non-animated `filter` attribute being overridden by a
+         normal CSS rule, not competing with a SMIL animation on that
+         same property, so the override is reliable. */
+      @media (prefers-reduced-motion: reduce) {
+        .reduced-motion-hide { display: none; }
+        .glitch-text-target { filter: url(#glow-base); }
+      }
+      .name-base {
+        font-family:Orbitron,Impact,'Arial Narrow',Arial,sans-serif;
+        font-weight: 900;
+        font-size: 72px;
+        letter-spacing: 0.18em;
+        fill: #e8e8f0;
+      }
+      .handle {
+        font-family:Orbitron,Impact,'Arial Narrow',Arial,sans-serif;
+        font-weight: 400;
+        font-size: 13px;
+        letter-spacing: 0.45em;
+        fill: rgba(0,255,255,0.5);
+        animation: handle-pulse 3s ease-in-out infinite;
+      }
+      .underline {
+        stroke: #00ffff;
+        stroke-width: 1.5;
+        fill: none;
+        stroke-dasharray: 720;
+        stroke-dashoffset: 720;
+        animation: underline-draw 2.2s cubic-bezier(0.4,0,0.2,1) 0.5s forwards,
+                   underline-pulse 3s 2.7s ease-in-out infinite;
+      }
+      .bracket { stroke: rgba(138,43,226,0.6); stroke-width: 1.5; fill: none; }
+
+      /* Glitch clip tears */
+      .tear-1 {
+        animation: tear-1 5s ease-in-out infinite;
+        clip-path: inset(100% 0 0 0);
+      }
+      .tear-2 {
+        animation: tear-2 5s ease-in-out infinite;
+        clip-path: inset(100% 0 0 0);
+      }
+
+      @keyframes handle-pulse {
+        0%,100% { opacity:0.5; } 50% { opacity:1; }
+      }
+      @keyframes underline-draw {
+        to { stroke-dashoffset: 0; }
+      }
+      @keyframes underline-pulse {
+        0%,100% { opacity:0.6; } 50% { opacity:1; }
+      }
+      @keyframes tear-1 {
+        0%,84%  { clip-path:inset(100% 0 0 0);   transform:translate(0,0); }
+        86%     { clip-path:inset(22% 0 58% 0);   transform:translate(-7px,0); }
+        88%     { clip-path:inset(60% 0 28% 0);   transform:translate(5px,0); }
+        90%     { clip-path:inset(15% 0 72% 0);   transform:translate(-4px,0); }
+        92%,100%{ clip-path:inset(100% 0 0 0);   transform:translate(0,0); }
+      }
+      @keyframes tear-2 {
+        0%,84%  { clip-path:inset(100% 0 0 0);   transform:translate(0,0); }
+        87%     { clip-path:inset(45% 0 38% 0);   transform:translate(8px,0); }
+        89%     { clip-path:inset(72% 0 12% 0);   transform:translate(-6px,0); }
+        91%     { clip-path:inset(30% 0 55% 0);   transform:translate(4px,0); }
+        93%,100%{ clip-path:inset(100% 0 0 0);   transform:translate(0,0); }
+      }
+    </style>
+
+    <!-- Scanline pattern — replaces 40 individual lines -->
+    <pattern id="scanlines" x="0" y="0" width="900" height="4" patternUnits="userSpaceOnUse">
+      <rect x="0" y="3" width="900" height="1" fill="rgba(0,0,0,0.07)"/>
+    </pattern>
+
+    <!-- Noise for feTurbulence glitch distortion -->
+    <filter id="glitch-distort" x="-5%" y="-10%" width="110%" height="120%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65 0.001" numOctaves="1" seed="2" result="noise">
+        <animate attributeName="seed" values="2;8;3;15;2" dur="5s"
+                 keyTimes="0;0.84;0.88;0.92;1" calcMode="discrete" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" result="displaced">
+        <animate attributeName="scale" values="0;0;18;0;0" dur="5s"
+                 keyTimes="0;0.84;0.88;0.92;1" calcMode="discrete" repeatCount="indefinite"/>
+      </feDisplacementMap>
+      <feGaussianBlur in="displaced" stdDeviation="0.4" result="blurred"/>
+      <feMerge>
+        <feMergeNode in="blurred"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- RGB split — red channel -->
+    <filter id="rgb-red" x="-5%" y="-20%" width="110%" height="140%">
+      <feColorMatrix type="matrix"
+        values="1 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 1 0" result="red"/>
+      <feOffset dx="-5" dy="0" in="red" result="shifted-red"/>
+      <feMerge><feMergeNode in="shifted-red"/></feMerge>
+    </filter>
+
+    <!-- RGB split — cyan channel -->
+    <filter id="rgb-cyan" x="-5%" y="-20%" width="110%" height="140%">
+      <feColorMatrix type="matrix"
+        values="0 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 1 0" result="cyan"/>
+      <feOffset dx="5" dy="0" in="cyan" result="shifted-cyan"/>
+      <feMerge><feMergeNode in="shifted-cyan"/></feMerge>
+    </filter>
+
+    <!-- Base glow -->
+    <filter id="glow-base" x="-5%" y="-30%" width="110%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Cyan line glow -->
+    <filter id="glow-line" x="-5%" y="-300%" width="110%" height="700%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Violet glow -->
+    <filter id="glow-violet" x="-10%" y="-50%" width="120%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="160" fill="#0a0812"/>
+
+  <!-- Scanlines via pattern -->
+  <rect width="900" height="160" fill="url(#scanlines)"/>
+
+  <!-- Corner brackets -->
+  <polyline class="bracket" points="20,20 20,8 32,8"   filter="url(#glow-violet)"/>
+  <polyline class="bracket" points="868,8 880,8 880,20" filter="url(#glow-violet)"/>
+  <polyline class="bracket" points="20,140 20,152 32,152" filter="url(#glow-violet)"/>
+  <polyline class="bracket" points="868,152 880,152 880,140" filter="url(#glow-violet)"/>
+
+  <!-- RGB red split — only visible during glitch -->
+  <g filter="url(#rgb-red)" opacity="0" class="reduced-motion-hide">
+    <text x="450" y="100" text-anchor="middle" class="name-base" fill="rgba(255,0,60,0.8)">NOOR ALHUSSAIN</text>
+    <animate attributeName="opacity" values="0;0;0.9;0;0" dur="5s"
+             keyTimes="0;0.85;0.88;0.91;1" calcMode="linear" repeatCount="indefinite"/>
+  </g>
+
+  <!-- RGB cyan split -->
+  <g filter="url(#rgb-cyan)" opacity="0" class="reduced-motion-hide">
+    <text x="450" y="100" text-anchor="middle" class="name-base" fill="rgba(0,255,255,0.8)">NOOR ALHUSSAIN</text>
+    <animate attributeName="opacity" values="0;0;0.9;0;0" dur="5s"
+             keyTimes="0;0.85;0.88;0.91;1" calcMode="linear" repeatCount="indefinite"/>
+  </g>
+
+  <!-- Clip tear layers -->
+  <text x="450" y="100" text-anchor="middle" class="name-base tear-1"
+        fill="#0a0812">NOOR ALHUSSAIN</text>
+  <text x="450" y="100" text-anchor="middle" class="name-base tear-2"
+        fill="#e8e8f0">NOOR ALHUSSAIN</text>
+
+  <!-- Main name with displacement glitch -->
+  <text x="450" y="100" text-anchor="middle"
+        class="name-base glitch-text-target" filter="url(#glitch-distort) url(#glow-base)">NOOR ALHUSSAIN</text>
+
+  <!-- Neon underline -->
+  <line class="underline" x1="90" y1="116" x2="810" y2="116" filter="url(#glow-line)"/>
+
+  <!-- Handle -->
+  <text class="handle" x="450" y="142" text-anchor="middle">[ NOORHACK ]</text>
+</svg>

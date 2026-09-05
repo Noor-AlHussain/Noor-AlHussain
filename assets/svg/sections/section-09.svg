@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 48" width="900" height="48">
+  <defs>
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      /* SMIL opacity pulse on the accent bar below is a separate
+         animation system the block above cannot reach (it only
+         covers CSS animations/transitions) — hidden outright instead. */
+      @media (prefers-reduced-motion: reduce) {
+        .reduced-motion-hide { display: none; }
+      }
+    </style>
+    <filter id="hdr-glow" x="-5%" y="-50%" width="110%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="hdr-grad-09" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#ff003c" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ff003c" stop-opacity="0.0"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="48" fill="#0a0812"/>
+  <rect x="0" y="8" width="3" height="32" fill="#ff003c" filter="url(#hdr-glow)" rx="1.5" class="reduced-motion-hide">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="3" y="23" width="500" height="1" fill="url(#hdr-grad-09)" opacity="0.5"/>
+  <text x="18" y="20" font-family="&apos;Share Tech Mono&apos;,&apos;Courier New&apos;,monospace"
+        font-size="9" fill="#ff003c" opacity="0.55" letter-spacing="3">// SECTION 09</text>
+  <text x="18" y="38" font-family="Orbitron,Impact,&apos;Arial Narrow&apos;,Arial,sans-serif"
+        font-size="17" font-weight="700" fill="#ff003c"
+        letter-spacing="5" filter="url(#hdr-glow)">SIGNAL INTERCEPT</text>
+  <text x="860" y="38" font-family="&apos;Share Tech Mono&apos;,monospace"
+        font-size="14" fill="#ff003c" opacity="0.3" text-anchor="end"
+        letter-spacing="2">[ 09 ]</text>
+</svg>

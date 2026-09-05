@@ -1,0 +1,39 @@
+[package]
+name = "void-engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Noor AlHussain <noorhack.work@gmail.com>"]
+description = "Custom voxel-sphere renderer — Rust + wgpu, compiled to WebAssembly."
+license = "GPL-3.0-or-later"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wgpu        = { version = "0.19", default-features = false, features = ["webgpu", "webgl"] }
+winit       = { version = "0.29", default-features = false, features = ["rwh_06"] }
+bytemuck    = { version = "1.14", features = ["derive"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys      = "0.3"          # js_sys::Date::now() for the render-loop clock
+console_error_panic_hook = "0.1"
+log = "0.4"
+console_log = "1.0"
+glam = "0.25"          # vector/matrix math — used instead of hand-rolled Vec3/Mat4
+pollster = "0.3"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Document", "Window", "Element", "HtmlCanvasElement",
+  "GpuCanvasContext", "MediaQueryList",
+]
+
+[profile.release]
+opt-level = "s"     # optimize for binary size — matters for WASM download time
+lto       = true
+panic     = "abort"
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Os"]

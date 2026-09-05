@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Quantum Atom — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    #c{width:100%;height:100%;touch-action:none;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.1em;font-size:12px;max-width:480px;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">BABYLON.JS — PBR + WEBXR</div>
+  <div id="label">// QUANTUM ATOM — PBR RENDERING — DRAG TO ROTATE — VR READY</div>
+  <canvas id="c" role="img" aria-label="Interactive 3D quantum atom simulation — a glowing nucleus with three orbiting electrons, rendered with Babylon.js physically-based materials"></canvas>
+  <div id="fallback">
+    <p>This scene needs WebGL, which isn't available in this browser or has been disabled.<br/>
+    Try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration enabled.</p>
+  </div>
+
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+
+  <script>
+  'use strict';
+
+  const canvas = document.getElementById('c');
+  let engine;
+  try {
+    engine = new BABYLON.Engine(canvas, true, {
+      preserveDrawingBuffer:true, stencil:true
+    });
+  } catch (e) {
+    document.getElementById('fallback').style.display = 'flex';
+    canvas.style.display = 'none';
+    throw new Error('WebGL unavailable for atom-3d: ' + e.message);
+  }
+
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color4(0.039,0.031,0.071,1);
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Camera ──────────────────────────────────────────────────────────
+  const cam = new BABYLON.ArcRotateCamera('cam',
+    -Math.PI/2, Math.PI/3, 12, BABYLON.Vector3.Zero(), scene);
+  cam.attachControl(canvas, true);
+  cam.lowerRadiusLimit = 5;
+  cam.upperRadiusLimit = 22;
+  cam.wheelDeltaPercentage = 0.01;
+  if (!reduceMotion) {
+    cam.useAutoRotationBehavior = true;
+    cam.autoRotationBehavior.idleRotationSpeed = 0.4;
+  }
+
+  // ── Lighting — Physically based ──────────────────────────────────────
+  const hemi = new BABYLON.HemisphericLight('hemi',
+    new BABYLON.Vector3(0,1,0), scene);
+  hemi.intensity = 0.2;
+  hemi.groundColor = new BABYLON.Color3(0.039,0.031,0.071);
+
+  // Nucleus point light — pulses
+  const nucLight = new BABYLON.PointLight('nucLight',
+    BABYLON.Vector3.Zero(), scene);
+  nucLight.diffuse  = new BABYLON.Color3(0,1,1);
+  nucLight.specular = new BABYLON.Color3(0,1,1);
+  nucLight.intensity= 2.0;
+  nucLight.range    = 18;
+
+  // Violet rim light
+  const rimLight = new BABYLON.PointLight('rim',
+    new BABYLON.Vector3(6,4,0), scene);
+  rimLight.diffuse  = new BABYLON.Color3(0.54,0.17,0.89);
+  rimLight.intensity= 0.8;
+  rimLight.range    = 20;
+
+  // ── Nucleus — PBR material ───────────────────────────────────────────
+  const nucleus = BABYLON.MeshBuilder.CreateSphere('nucleus',
+    {diameter:1.4, segments:64}, scene);
+  const nucMat = new BABYLON.PBRMaterial('nucMat', scene);
+  nucMat.albedoColor    = new BABYLON.Color3(0,0.8,0.9);
+  nucMat.emissiveColor  = new BABYLON.Color3(0,0.6,0.7);
+  nucMat.metallic       = 0.0;
+  nucMat.roughness      = 0.15;
+  nucMat.subSurface.isRefractionEnabled = false;
+  nucleus.material = nucMat;
+
+  // Nucleus glow layer
+  const gl = new BABYLON.GlowLayer('glow', scene);
+  gl.intensity = 0.8;
+  gl.addIncludedOnlyMesh(nucleus);
+
+  // ── Orbit paths ──────────────────────────────────────────────────────
+  const ORBIT_R = 3.6, ORBIT_RY = 1.3;
+
+  function makeOrbitRing(tiltX, tiltZ, color) {
+    const pts = [];
+    for(let i=0;i<=72;i++){
+      const a=i/72*Math.PI*2;
+      pts.push(new BABYLON.Vector3(
+        Math.cos(a)*ORBIT_R, 0, Math.sin(a)*ORBIT_RY));
+    }
+    const ring = BABYLON.MeshBuilder.CreateLines('ring', {points:pts}, scene);
+    ring.color = color;
+    ring.alpha = 0.18;
+    ring.rotation.x = tiltX;
+    ring.rotation.z = tiltZ;
+    return ring;
+  }
+
+  makeOrbitRing(0,           0,           new BABYLON.Color3(0,1,1));
+  makeOrbitRing(Math.PI/3,   0,           new BABYLON.Color3(0.54,0.17,0.89));
+  makeOrbitRing(-Math.PI/3,  Math.PI/6,   new BABYLON.Color3(0,1,0.25));
+
+  // ── Electrons — PBR + GlowLayer ──────────────────────────────────────
+  const ELECTRONS = [
+    { speed:0.9,  phase:0,   tiltX:0,          tiltZ:0,
+      col: new BABYLON.Color3(0,1,1),          emit: new BABYLON.Color3(0,0.8,0.8) },
+    { speed:0.55, phase:2.1, tiltX:Math.PI/3,  tiltZ:0,
+      col: new BABYLON.Color3(0.54,0.17,0.89), emit: new BABYLON.Color3(0.4,0.1,0.7)},
+    { speed:1.1,  phase:4.2, tiltX:-Math.PI/3, tiltZ:Math.PI/6,
+      col: new BABYLON.Color3(0,1,0.25),       emit: new BABYLON.Color3(0,0.7,0.2) },
+  ];
+
+  const electrons = ELECTRONS.map((e,i)=>{
+    const mesh = BABYLON.MeshBuilder.CreateSphere(`e${i}`,
+      {diameter:0.28, segments:16}, scene);
+    const mat  = new BABYLON.PBRMaterial(`eMat${i}`, scene);
+    mat.albedoColor   = e.col;
+    mat.emissiveColor = e.emit;
+    mat.metallic  = 0.0;
+    mat.roughness = 0.05;
+    mesh.material = mat;
+    gl.addIncludedOnlyMesh(mesh);
+
+    // Trail — ParticleSystem
+    const ps = new BABYLON.ParticleSystem(`trail${i}`, 60, scene);
+    ps.particleTexture = new BABYLON.Texture(
+      'https://assets.babylonjs.com/textures/flare.png', scene);
+    ps.emitter       = mesh;
+    ps.minSize       = 0.05; ps.maxSize  = 0.12;
+    ps.minLifeTime   = 0.1;  ps.maxLifeTime= 0.3;
+    ps.emitRate      = 60;
+    ps.color1        = new BABYLON.Color4(...e.col.asArray(),0.8);
+    ps.color2        = new BABYLON.Color4(...e.col.asArray(),0.0);
+    ps.minEmitPower  = 0; ps.maxEmitPower=0;
+    ps.updateSpeed   = 0.01;
+    ps.blendMode     = BABYLON.ParticleSystem.BLENDMODE_ADD;
+    ps.start();
+
+    return { ...e, mesh, t:e.phase };
+  });
+
+  // ── Post-processing — Bloom + Lens flare ─────────────────────────────
+  const pipeline = new BABYLON.DefaultRenderingPipeline(
+    'pipeline', true, scene, [cam]);
+  pipeline.bloomEnabled  = true;
+  pipeline.bloomThreshold= 0.3;
+  pipeline.bloomWeight   = 0.6;
+  pipeline.bloomKernel   = 64;
+  pipeline.bloomScale    = 0.5;
+  pipeline.imageProcessingEnabled = true;
+  pipeline.imageProcessing.toneMappingEnabled = true;
+  pipeline.imageProcessing.toneMappingType    =
+    BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+  pipeline.imageProcessing.exposure = 1.1;
+  pipeline.chromaticAberrationEnabled = true;
+  pipeline.chromaticAberration.aberrationAmount = 20;
+
+  // ── Stars ────────────────────────────────────────────────────────────
+  const starPS = new BABYLON.ParticleSystem('stars', 2000, scene);
+  starPS.particleTexture = new BABYLON.Texture(
+    'https://assets.babylonjs.com/textures/flare.png', scene);
+  starPS.emitter       = BABYLON.Vector3.Zero();
+  starPS.minEmitBox    = new BABYLON.Vector3(-80,-80,-80);
+  starPS.maxEmitBox    = new BABYLON.Vector3( 80, 80, 80);
+  starPS.color1        = new BABYLON.Color4(1,1,1,0.4);
+  starPS.color2        = new BABYLON.Color4(0.8,0.9,1,0.2);
+  starPS.minSize       = 0.05; starPS.maxSize    = 0.12;
+  starPS.minLifeTime   = 9999; starPS.maxLifeTime= 9999;
+  starPS.emitRate      = 0;
+  starPS.manualEmitCount = 2000;
+  starPS.minEmitPower  = 0; starPS.maxEmitPower = 0;
+  starPS.blendMode     = BABYLON.ParticleSystem.BLENDMODE_ADD;
+  starPS.start();
+
+  // ── Animation loop ───────────────────────────────────────────────────
+  let t = 0;
+  scene.onBeforeRenderObservable.add(()=>{
+    const dt = reduceMotion ? 0 : engine.getDeltaTime() * 0.001;
+    t += dt;
+
+    // Nucleus pulse
+    nucMat.emissiveColor = new BABYLON.Color3(
+      0, 0.5+0.2*Math.sin(t*1.8), 0.6+0.15*Math.sin(t*1.8));
+    nucLight.intensity = 1.8 + 0.8*Math.sin(t*1.8);
+
+    // Electron orbits
+    electrons.forEach(e=>{
+      e.t += dt*e.speed;
+      const x = Math.cos(e.t)*ORBIT_R;
+      const z = Math.sin(e.t)*ORBIT_RY;
+      // Apply tilt
+      const y  =  z*Math.sin(e.tiltX) + x*Math.sin(e.tiltZ)*0.3;
+      const zr =  z*Math.cos(e.tiltX);
+      e.mesh.position.set(x, y, zr);
+    });
+  });
+
+  engine.runRenderLoop(()=>scene.render());
+  window.addEventListener('resize',()=>engine.resize());
+
+  // ── WebXR — room-scale VR support ─────────────────────────────────
+  // Babylon's helper handles session negotiation, controller input, and
+  // reference space setup; we only need to opt in and place the rig.
+  (async () => {
+    if (!navigator.xr) return; // no WebXR in this browser — skip silently
+    let supported = false;
+    try {
+      supported = await navigator.xr.isSessionSupported('immersive-vr');
+    } catch { supported = false; }
+    if (!supported) return;
+
+    try {
+      const xrHelper = await scene.createDefaultXRExperienceAsync({
+        floorMeshes: [],
+      });
+      // Scale the whole atom down to arm's reach so "walking inside it"
+      // reads as intentional rather than disorienting.
+      xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+        if (state === BABYLON.WebXRState.IN_XR) {
+          scene.rootNodes.forEach(n => { if (n !== xrHelper.baseExperience.camera) {} });
+          nucleus.scaling.setAll(0.4);
+          electrons.forEach(e => e.mesh.scaling.setAll(0.4));
+        }
+      });
+
+      const vrBtn = document.createElement('button');
+      vrBtn.textContent = 'ENTER VR';
+      vrBtn.style.cssText = `
+        position:fixed;bottom:60px;left:50%;transform:translateX(-50%);
+        font-family:'Share Tech Mono','Courier New',monospace;font-size:11px;
+        letter-spacing:.2em;color:#00ffff;background:rgba(10,8,18,0.85);
+        border:1px solid rgba(0,255,255,0.4);padding:10px 22px;cursor:pointer;
+        z-index:20;`;
+      vrBtn.addEventListener('mouseenter', ()=>vrBtn.style.borderColor='rgba(0,255,255,0.9)');
+      vrBtn.addEventListener('mouseleave', ()=>vrBtn.style.borderColor='rgba(0,255,255,0.4)');
+      vrBtn.addEventListener('click', () => {
+        xrHelper.baseExperience.enterXRAsync('immersive-vr', 'local-floor');
+      });
+      document.body.appendChild(vrBtn);
+    } catch (e) {
+      console.warn('WebXR setup failed:', e.message);
+    }
+  })();
+  </script>
+</body>
+</html>

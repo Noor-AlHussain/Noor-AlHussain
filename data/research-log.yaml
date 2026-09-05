@@ -1,0 +1,67 @@
+# research-log.yaml
+#
+# Living record of public research notes, CTF achievements, and learning milestones.
+# This file is the single source of truth for the RESEARCH section of the README
+# and the corresponding GitHub Pages page. Update it by adding an entry below;
+# the update-readme workflow will re-render the section automatically.
+#
+# Field reference:
+#   date:       YYYY-MM-DD
+#   type:       research | ctf | learning | publication | talk
+#   title:      short public-facing title
+#   tags:       array of relevant topic tags
+#   summary:    1-3 sentence public description (no unpublished exploit details)
+#   link:       optional public URL (write-up, repo, paper)
+#   status:     published | in-progress | planned
+
+entries:
+  - date: 2025-01-01
+    type: learning
+    title: "Compiler pipeline — lexer → parser → bytecode → VM, hand-written in JS"
+    tags: [compilers, "language-design", javascript]
+    summary: >
+      Built a complete toy-language compiler from scratch: regex lexer, recursive-descent
+      parser producing a typed AST, a stack-based bytecode compiler, and a stepped VM
+      with live register/stack visualization. No parser generator — every stage is hand-rolled.
+    link: "https://noor-alhussain.github.io/Noor-AlHussain/compiler-playground/"
+    status: published
+
+  - date: 2025-01-01
+    type: research
+    title: "Timing side-channel: naive vs constant-time comparison, measured in-browser"
+    tags: [security, "side-channel", cryptography, javascript]
+    summary: >
+      Interactive demo that benchmarks 20,000 string comparisons per guess variant, in the
+      visitor's own browser, showing the measurable timing difference between early-exit and
+      constant-time comparison — the same class of vulnerability that motivated HMAC verification
+      in crypto libraries.
+    link: "https://noor-alhussain.github.io/Noor-AlHussain/timing-demo/"
+    status: published
+
+  - date: 2025-01-01
+    type: research
+    title: "DPLL SAT solver + exponential blowup visualization"
+    tags: [algorithms, "complexity-theory", "P-vs-NP", sat]
+    summary: >
+      A complete DPLL solver running in the browser, with an animated search tree and a live
+      chart showing measured average DPLL steps from n=2 to n=12 variables at the phase-transition
+      clause density — making the exponential growth visible rather than just stated.
+    link: "https://noor-alhussain.github.io/Noor-AlHussain/sat-solver/"
+    status: published
+
+  # ── Add new entries below this line ──────────────────────────────────────
+  # - date: YYYY-MM-DD
+  #   type: ctf | research | learning | publication | talk
+  #   title: ""
+  #   tags: []
+  #   summary: ""
+  #   link: ""
+  #   status: published
+
+  # ── Note on CTFtime integration (researched, not built) ────────────────
+  # CTFtime's public API only exposes TOP TEAM rankings — there is no
+  # official endpoint for a single team's writeups or event history, so a
+  # "live CTFtime feed" isn't something the API actually supports beyond a
+  # basic team-ranking badge. If you have a registered CTFtime team, add a
+  # manual `ctf` entry per event above instead of expecting an automated
+  # feed — the API doesn't provide the data an automated feed would need.
