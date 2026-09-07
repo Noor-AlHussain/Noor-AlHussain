@@ -27,7 +27,7 @@
     "validate:resume": "node -e \"JSON.parse(require('fs').readFileSync('resume.json','utf8')); console.log('resume.json is valid JSON')\""
   },
   "dependencies": {
-    "@octokit/graphql": "^7.0.0",
+    "@octokit/graphql": "^9.0.5",
     "svgo": "^3.0.0",
     "upng-js": "^2.1.0",
     "yaml": "^2.3.4"
