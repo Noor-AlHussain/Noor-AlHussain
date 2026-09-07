@@ -164,7 +164,7 @@ jobs:
       # a public, unforgeable link between "this exact file" and "this exact
       # GitHub Actions run, on this exact commit, in this exact repo."
       - name: Attest integrity manifest provenance (Sigstore / Fulcio / Rekor)
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'assets/integrity-manifest.asc'
 
