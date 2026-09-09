@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 80" width="900" height="80">
+  <defs>
+    <filter id="osc-glow" x="-5%" y="-50%" width="110%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg  { fill: #0a0812; }
+      .grid{ stroke: rgba(0,255,255,0.05); stroke-width:1; }
+      .wave{
+        fill: none; stroke: #00ffff; stroke-width: 1.8;
+        stroke-linecap: round; stroke-linejoin: round;
+        filter: url(#osc-glow);
+        animation: wave-shift 3s linear infinite;
+        stroke-dasharray: 900;
+      }
+      .wave-2{
+        fill: none; stroke: rgba(138,43,226,0.5); stroke-width: 1;
+        stroke-linecap: round;
+        filter: url(#osc-glow);
+        animation: wave-shift-2 4s linear infinite;
+      }
+      .label{
+        font-family:'Share Tech Mono','Courier New',Courier,monospace; font-size:8px;
+        fill:rgba(0,255,255,0.25); letter-spacing:0.2em;
+      }
+      @keyframes wave-shift {
+        from { stroke-dashoffset: 0;    }
+        to   { stroke-dashoffset:-900;  }
+      }
+      @keyframes wave-shift-2 {
+        from { stroke-dashoffset: 0;    }
+        to   { stroke-dashoffset: 900;  }
+      }
+    </style>
+  </defs>
+
+  <rect class="bg" width="900" height="80"/>
+
+  <!-- Grid -->
+  <line class="grid" x1="0"   y1="40" x2="900" y2="40"/>
+  <line class="grid" x1="0"   y1="16" x2="900" y2="16"/>
+  <line class="grid" x1="0"   y1="64" x2="900" y2="64"/>
+  <line class="grid" x1="150" y1="0"  x2="150" y2="80"/>
+  <line class="grid" x1="300" y1="0"  x2="300" y2="80"/>
+  <line class="grid" x1="450" y1="0"  x2="450" y2="80"/>
+  <line class="grid" x1="600" y1="0"  x2="600" y2="80"/>
+  <line class="grid" x1="750" y1="0"  x2="750" y2="80"/>
+
+  <!--
+    Sine wave path: y = 40 + 22*sin(2*PI*x/150)
+    Generated points every 5px from x=0 to x=900
+  -->
+  <polyline class="wave" points="
+    0,40 5,49 10,57 15,63 20,68 25,71 30,62 35,58
+    40,50 45,41 50,32 55,22 60,14 65,9 70,8 75,9
+    80,14 85,22 90,32 95,41 100,50 105,58 110,62 115,71
+    120,68 125,63 130,57 135,49 140,40 145,31 150,22
+    155,18 160,14 165,9 170,8 175,9 180,14 185,22 190,31
+    195,40 200,49 205,57 210,63 215,68 220,71 225,62 230,58
+    235,50 240,41 245,32 250,22 255,14 260,9 265,8 270,9
+    275,14 280,22 285,32 290,41 295,50 300,58 305,62 310,71
+    315,68 320,63 325,57 330,49 335,40 340,31 345,22 350,18
+    355,14 360,9 365,8 370,9 375,14 380,22 385,31 390,40
+    395,49 400,57 405,63 410,68 415,71 420,62 425,58 430,50
+    435,41 440,32 445,22 450,14 455,9 460,8 465,9 470,14
+    475,22 480,32 485,41 490,50 495,58 500,62 505,71 510,68
+    515,63 520,57 525,49 530,40 535,31 540,22 545,18 550,14
+    555,9 560,8 565,9 570,14 575,22 580,31 585,40 590,49
+    595,57 600,63 605,68 610,71 615,62 620,58 625,50 630,41
+    635,32 640,22 645,14 650,9 655,8 660,9 665,14 670,22
+    675,32 680,41 685,50 690,58 695,62 700,71 705,68 710,63
+    715,57 720,49 725,40 730,31 735,22 740,18 745,14 750,9
+    755,8 760,9 765,14 770,22 775,31 780,40 785,49 790,57
+    795,63 800,68 805,71 810,62 815,58 820,50 825,41 830,32
+    835,22 840,14 845,9 850,8 855,9 860,14 865,22 870,32
+    875,41 880,50 885,58 890,62 895,71 900,68
+  "/>
+
+  <!-- Secondary wave (noise channel) -->
+  <polyline class="wave-2" points="
+    0,40 20,35 40,42 60,38 80,44 100,37 120,43 140,39
+    160,41 180,36 200,44 220,40 240,37 260,43 280,39 300,41
+    320,38 340,44 360,40 380,36 400,43 420,39 440,41 460,37
+    480,44 500,40 520,36 540,42 560,39 580,43 600,40 620,37
+    640,44 660,40 680,36 700,43 720,39 740,41 760,37 780,44
+    800,40 820,36 840,43 860,39 880,41 900,40
+  "/>
+
+  <!-- Labels -->
+  <text class="label" x="8" y="12">CH1 — SIGNAL</text>
+  <text class="label" x="8" y="76">// OSCILLOSCOPE</text>
+  <text class="label" x="820" y="12">1V/DIV</text>
+  <text class="label" x="800" y="76">150ms/DIV</text>
+</svg>

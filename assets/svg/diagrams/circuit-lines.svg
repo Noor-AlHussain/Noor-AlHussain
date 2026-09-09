@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 60" width="900" height="60">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg{fill:#0a0812;}
+      .trace{fill:none;stroke:rgba(0,255,255,0.14);stroke-width:1.4;}
+      .pad{fill:rgba(0,255,255,0.18);}
+      .signal{filter:url(#sg);}
+      @keyframes travel-a{from{offset-distance:0%}to{offset-distance:100%}}
+      @keyframes travel-b{from{offset-distance:0%}to{offset-distance:100%}}
+      .dot-a{offset-path:path('M 0,30 L 140,30 L 170,10 L 380,10 L 410,30 L 900,30');
+             animation:travel-a 3.2s linear infinite;}
+      .dot-b{offset-path:path('M 0,30 L 220,30 L 250,50 L 520,50 L 550,30 L 900,30');
+             animation:travel-b 4.1s linear infinite 0.6s;}
+      .dot-c{offset-path:path('M 0,30 L 90,30 L 120,18 L 640,18 L 670,30 L 900,30');
+             animation:travel-a 5.0s linear infinite 1.4s;}
+    </style>
+    <filter id="sg" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect class="bg" width="900" height="60"/>
+
+  <!-- PCB traces — three parallel circuit paths with right-angle routing -->
+  <path class="trace" d="M 0,30 L 140,30 L 170,10 L 380,10 L 410,30 L 900,30"/>
+  <path class="trace" d="M 0,30 L 220,30 L 250,50 L 520,50 L 550,30 L 900,30"/>
+  <path class="trace" d="M 0,30 L 90,30  L 120,18 L 640,18 L 670,30 L 900,30"/>
+
+  <!-- Via pads at junctions -->
+  <circle class="pad" cx="140" cy="30" r="3"/>
+  <circle class="pad" cx="170" cy="10" r="3"/>
+  <circle class="pad" cx="380" cy="10" r="3"/>
+  <circle class="pad" cx="410" cy="30" r="3"/>
+  <circle class="pad" cx="220" cy="30" r="3"/>
+  <circle class="pad" cx="250" cy="50" r="3"/>
+  <circle class="pad" cx="520" cy="50" r="3"/>
+  <circle class="pad" cx="550" cy="30" r="3"/>
+  <circle class="pad" cx="90"  cy="30" r="3"/>
+  <circle class="pad" cx="120" cy="18" r="3"/>
+  <circle class="pad" cx="640" cy="18" r="3"/>
+  <circle class="pad" cx="670" cy="30" r="3"/>
+
+  <!-- Traveling signal dots along the traces -->
+  <circle class="signal dot-a" r="3" fill="#00ffff"/>
+  <circle class="signal dot-b" r="2.5" fill="#8a2be2"/>
+  <circle class="signal dot-c" r="2.5" fill="#00ff41"/>
+</svg>

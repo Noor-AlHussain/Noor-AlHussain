@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Void Portal — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    canvas{display:block;width:100%;height:100%;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;border:1px solid rgba(0,255,255,0.1);
+      padding:4px 10px;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">RAW WEBGL2 — NO LIBRARY</div>
+  <div id="label">// VOID PORTAL — PURE GLSL ES 3.0 — MOVE MOUSE</div>
+  <canvas id="c" role="img" aria-label="Interactive void portal — a swirling wormhole rendered with a pure GLSL fragment shader, ring and streak patterns twisting around a glowing singularity that follows the mouse"></canvas>
+
+  <script>
+  'use strict';
+  // ── Raw WebGL2 setup — zero dependencies ─────────────────────────────
+  const canvas = document.getElementById('c');
+  const gl     = canvas.getContext('webgl2', { antialias:true, alpha:false });
+  if (!gl) { document.body.innerHTML='<p style="color:#ff003c;font-family:monospace;padding:20px">WebGL2 not supported</p>'; }
+
+  // GLSL ES 3.0 — note the #version 300 es header
+  const VERT_SRC = `#version 300 es
+precision highp float;
+in vec2 aPos;
+void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+  const FRAG_SRC = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+
+uniform float uTime;
+uniform vec2  uResolution;
+uniform vec2  uMouse;
+
+#define PI  3.14159265358979
+#define TAU 6.28318530717959
+
+// ── Noise functions ───────────────────────────────────────────────────
+float hash(vec2 p){
+  p = fract(p * vec2(234.34, 435.345));
+  p += dot(p, p + 34.23);
+  return fract(p.x * p.y);
+}
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p);
+  f = f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
+}
+float fbm(vec2 p){
+  float v=0.0, a=0.5;
+  for(int i=0;i<4;i++){v+=a*noise(p);p*=2.1;a*=0.5;}
+  return v;
+}
+
+// ── Wormhole core ────────────────────────────────────────────────────
+vec3 wormhole(vec2 uv, float t){
+  vec2 aspect = vec2(uResolution.x/uResolution.y, 1.0);
+  vec2 c      = (uv - uMouse) * aspect;
+  float r     = length(c);
+  float ang   = atan(c.y, c.x);
+  float z     = 1.0 - pow(r, 0.52);
+
+  float twist = ang + t*0.68 + z*PI*3.4;
+
+  // Rings
+  float rings = abs(sin(z*22.0 - t*3.0 + fbm(vec2(twist*0.26,z*2.2+t*0.16))*3.0));
+  rings = pow(1.0-rings, 5.0);
+
+  // Streaks
+  float streaks = pow(abs(sin(twist*10.0 + fbm(vec2(z*3.5,t*0.42))*3.5)), 7.0);
+
+  // Singularity glow
+  float sing = exp(-r*10.0)*(0.7+0.3*sin(t*3.5));
+
+  float edge = smoothstep(1.0, 0.5, r);
+
+  vec3 cyan   = vec3(0.0, 1.0, 1.0);
+  vec3 violet = vec3(0.54,0.17,0.89);
+  vec3 green  = vec3(0.0, 1.0, 0.25);
+  vec3 voidC  = vec3(0.039,0.031,0.071);
+  vec3 white  = vec3(1.0);
+
+  vec3 col = mix(voidC, violet, z*0.5);
+  col += cyan   * rings   * edge * 0.95;
+  col += green  * streaks * 0.3  * edge;
+  col += white  * sing;
+
+  // Scanlines — GLSL ES 3.0: use gl_FragCoord directly
+  float scan = 0.93 + 0.07*step(0.5, fract(gl_FragCoord.y*0.5));
+  col *= scan;
+
+  // Chromatic aberration
+  float aberr = (1.0-r)*0.016;
+  col.r += fbm(vec2(c*(1.0+aberr)+vec2(0.1,0.0)))*0.13;
+  col.b += fbm(vec2(c*(1.0-aberr)+vec2(0.0,0.1)))*0.13;
+
+  // Flicker
+  col *= 0.97 + 0.03*sin(t*67.0);
+
+  return col*edge;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec3 col = wormhole(uv, uTime);
+
+  // Vignette
+  vec2 vc = uv - uMouse;
+  col *= 1.0 - dot(vc,vc)*0.26;
+
+  fragColor = vec4(col, 1.0);
+}
+`;
+
+  // ── Compile shaders ───────────────────────────────────────────────────
+  function compileShader(type, src){
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+      console.error(gl.getShaderInfoLog(sh));
+    }
+    return sh;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compileShader(gl.VERTEX_SHADER,   VERT_SRC));
+  gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FRAG_SRC));
+  gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+    console.error(gl.getProgramInfoLog(prog));
+  }
+  gl.useProgram(prog);
+
+  // ── Full-screen quad ──────────────────────────────────────────────────
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
+  const vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]),
+    gl.STATIC_DRAW);
+
+  const aPosLoc = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPosLoc);
+  gl.vertexAttribPointer(aPosLoc, 2, gl.FLOAT, false, 0, 0);
+
+  // ── Uniform locations ─────────────────────────────────────────────────
+  const uTimeLoc = gl.getUniformLocation(prog, 'uTime');
+  const uResLoc  = gl.getUniformLocation(prog, 'uResolution');
+  const uMouseLoc= gl.getUniformLocation(prog, 'uMouse');
+
+  // ── Mouse tracking with smooth lerp ──────────────────────────────────
+  let mxT=0.5, myT=0.5, mxC=0.5, myC=0.5;
+  const LERP = 0.055;
+
+  window.addEventListener('mousemove', e=>{
+    mxT = e.clientX/innerWidth;
+    myT = 1.0 - e.clientY/innerHeight;
+  });
+  window.addEventListener('touchmove', e=>{
+    const t=e.touches[0];
+    mxT = t.clientX/innerWidth;
+    myT = 1.0 - t.clientY/innerHeight;
+  }, {passive:true});
+
+  // ── Resize ────────────────────────────────────────────────────────────
+  function resize(){
+    canvas.width  = innerWidth  * Math.min(devicePixelRatio,2);
+    canvas.height = innerHeight * Math.min(devicePixelRatio,2);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── Render loop ───────────────────────────────────────────────────────
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let t0 = performance.now();
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    const t = reduceMotion ? 0 : (now - t0) * 0.001;
+
+    // Smooth mouse
+    mxC += (mxT-mxC)*LERP;
+    myC += (myT-myC)*LERP;
+
+    gl.uniform1f(uTimeLoc, t);
+    gl.uniform2f(uResLoc,  canvas.width, canvas.height);
+    gl.uniform2f(uMouseLoc, mxC, myC);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+  requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="900" height="560">
+  <defs>
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      .bg { fill: #0a0812; }
+      .grid-line { stroke: rgba(0,255,255,0.04); stroke-width: 1; }
+      .data-line { fill:none; stroke-width: 1.4; stroke-linecap: round; }
+      .node-rect { rx: 4; stroke-width: 1.4; transition: opacity .15s; }
+      .node-label {
+        font-family: 'Share Tech Mono','Courier New',monospace;
+        font-size: 11px; letter-spacing: .12em; pointer-events: none;
+      }
+      .node-sub {
+        font-family: 'Share Tech Mono','Courier New',monospace;
+        font-size: 8px; letter-spacing: .06em; pointer-events: none;
+      }
+      .layer-label {
+        font-family: 'Share Tech Mono','Courier New',monospace;
+        font-size: 9px; letter-spacing: .3em; fill: rgba(232,232,240,0.28);
+      }
+      .map-title {
+        font-family: 'Orbitron',Impact,'Arial Narrow',Arial,sans-serif;
+        font-size: 13px; letter-spacing: .3em; fill: rgba(0,255,255,0.4);
+      }
+      a.node-link { cursor: pointer; }
+      a.node-link:hover .node-rect { filter: url(#node-glow-hover); }
+      a.node-link:hover .node-label { fill: #ffffff; }
+
+      /* SMIL animateMotion (used below for the four traveling pulse
+         dots) is a separate animation system from CSS Animations — the
+         prefers-reduced-motion block above only sets CSS
+         animation-duration/transition-duration and has no effect on it.
+         There is no CSS-only way to freeze a SMIL motion path mid-way,
+         so the dots are hidden outright under reduced motion instead of
+         left running; they are a decorative data-flow indicator layered
+         on top of the nodes/links, which remain fully static and fully
+         readable either way. */
+      @media (prefers-reduced-motion: reduce) {
+        .pulse-dot-anim { display: none; }
+      }
+    </style>
+
+    <filter id="node-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="node-glow-hover" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="line-glow" x="-10%" y="-200%" width="120%" height="500%">
+      <feGaussianBlur stdDeviation="1.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect class="bg" width="900" height="560"/>
+
+  <!-- Background grid -->
+  <g class="grid-line">
+    <line x1="0" y1="93"  x2="900" y2="93"/>
+    <line x1="0" y1="186" x2="900" y2="186"/>
+    <line x1="0" y1="279" x2="900" y2="279"/>
+    <line x1="0" y1="372" x2="900" y2="372"/>
+    <line x1="0" y1="465" x2="900" y2="465"/>
+  </g>
+
+  <text class="map-title" x="450" y="26" text-anchor="middle">// SYSTEM MAP — EVERYTHING ON THIS PROFILE, ONE GRAPH</text>
+
+  <!-- ════════ Layer 0 — HARDWARE / RUST-WASM ════════ -->
+  <text class="layer-label" x="20" y="60">LAYER 0 — HARDWARE &amp; NATIVE</text>
+
+  <!-- Connection lines first (so nodes sit on top) -->
+  <g class="data-line" filter="url(#line-glow)">
+    <path id="ln1" d="M 110,80 L 110,170" stroke="rgba(0,255,65,0.25)"/>
+    <path id="ln2" d="M 260,80 L 260,170" stroke="rgba(0,255,65,0.25)"/>
+    <path id="ln3" d="M 110,200 L 230,280" stroke="rgba(0,255,255,0.22)"/>
+    <path id="ln4" d="M 260,200 L 340,280" stroke="rgba(0,255,255,0.22)"/>
+    <path id="ln5" d="M 230,310 L 230,370" stroke="rgba(255,0,60,0.25)"/>
+    <path id="ln6" d="M 340,310 L 450,370" stroke="rgba(255,0,60,0.25)"/>
+    <path id="ln7" d="M 550,310 L 450,370" stroke="rgba(255,0,60,0.25)"/>
+    <path id="ln8" d="M 450,400 L 450,460" stroke="rgba(255,102,0,0.25)"/>
+    <path id="ln9" d="M 650,310 L 700,370" stroke="rgba(255,0,60,0.25)"/>
+    <path id="ln10" d="M 700,400 L 700,460" stroke="rgba(255,102,0,0.25)"/>
+    <path id="ln11" d="M 650,80 L 650,170" stroke="rgba(0,255,65,0.25)"/>
+    <path id="ln12" d="M 780,80 L 780,170" stroke="rgba(0,255,65,0.25)"/>
+    <path id="ln13" d="M 650,200 L 580,280" stroke="rgba(0,255,255,0.22)"/>
+    <path id="ln14" d="M 780,200 L 680,280" stroke="rgba(0,255,255,0.22)"/>
+    <path id="ln15" d="M 450,490 L 450,540" stroke="rgba(138,43,226,0.25)"/>
+    <path id="ln16" d="M 700,490 L 450,540" stroke="rgba(138,43,226,0.25)"/>
+  </g>
+
+  <!-- Traveling pulse dots along a few key paths -->
+  <circle class="pulse-dot-anim" r="2.5" fill="#00ffff">
+    <animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#ln3"/></animateMotion>
+  </circle>
+  <circle class="pulse-dot-anim" r="2.5" fill="#ff003c">
+    <animateMotion dur="4.1s" repeatCount="indefinite"><mpath href="#ln6"/></animateMotion>
+  </circle>
+  <circle class="pulse-dot-anim" r="2.5" fill="#ff6600">
+    <animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#ln8"/></animateMotion>
+  </circle>
+  <circle class="pulse-dot-anim" r="2.5" fill="#8a2be2">
+    <animateMotion dur="3.6s" repeatCount="indefinite"><mpath href="#ln15"/></animateMotion>
+  </circle>
+
+  <!-- ════════ Nodes ════════ -->
+  <!-- Hardware row -->
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/rust-engine/" target="_blank">
+    <rect class="node-rect" x="50" y="68" width="120" height="34" fill="rgba(0,255,65,0.07)" stroke="#00ff41" filter="url(#node-glow)"/>
+    <text class="node-label" x="60" y="86" fill="#00ff41">RUST &#8594; WASM</text>
+    <text class="node-sub"   x="60" y="97" fill="rgba(0,255,65,0.5)">wgpu native renderer</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/cpu/" target="_blank">
+    <rect class="node-rect" x="200" y="68" width="120" height="34" fill="rgba(0,255,65,0.07)" stroke="#00ff41" filter="url(#node-glow)"/>
+    <text class="node-label" x="210" y="86" fill="#00ff41">CPU DIE</text>
+    <text class="node-sub"   x="210" y="97" fill="rgba(0,255,65,0.5)">silicon layer view</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/particles/" target="_blank">
+    <rect class="node-rect" x="590" y="68" width="120" height="34" fill="rgba(0,255,65,0.07)" stroke="#00ff41" filter="url(#node-glow)"/>
+    <text class="node-label" x="600" y="86" fill="#00ff41">WEBGPU COMPUTE</text>
+    <text class="node-sub"   x="600" y="97" fill="rgba(0,255,65,0.5)">1M particles, GPU-bound</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/wormhole/" target="_blank">
+    <rect class="node-rect" x="720" y="68" width="120" height="34" fill="rgba(0,255,65,0.07)" stroke="#00ff41" filter="url(#node-glow)"/>
+    <text class="node-label" x="730" y="86" fill="#00ff41">RAW WEBGL2</text>
+    <text class="node-sub"   x="730" y="97" fill="rgba(0,255,65,0.5)">GLSL ES 3.0, zero deps</text>
+  </a>
+
+  <!-- Systems / Kernel row -->
+  <text class="layer-label" x="20" y="153">LAYER 1 — SYSTEMS &amp; LANGUAGE</text>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/compiler-playground/" target="_blank">
+    <rect class="node-rect" x="170" y="170" width="120" height="34" fill="rgba(0,255,255,0.07)" stroke="#00ffff" filter="url(#node-glow)"/>
+    <text class="node-label" x="180" y="188" fill="#00ffff">COMPILER</text>
+    <text class="node-sub"   x="180" y="199" fill="rgba(0,255,255,0.5)">lexer &#8594; parser &#8594; VM</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/universe/" target="_blank">
+    <rect class="node-rect" x="590" y="170" width="120" height="34" fill="rgba(0,255,255,0.07)" stroke="#00ffff" filter="url(#node-glow)"/>
+    <text class="node-label" x="600" y="188" fill="#00ffff">OGL ENGINE</text>
+    <text class="node-sub"   x="600" y="199" fill="rgba(0,255,255,0.5)">50KB, force graph</text>
+  </a>
+
+  <!-- Security row -->
+  <text class="layer-label" x="20" y="246">LAYER 2 — SECURITY</text>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/memory-visualizer/" target="_blank">
+    <rect class="node-rect" x="170" y="280" width="130" height="34" fill="rgba(255,0,60,0.07)" stroke="#ff003c" filter="url(#node-glow)"/>
+    <text class="node-label" x="180" y="298" fill="#ff003c">MEMORY SAFETY</text>
+    <text class="node-sub"   x="180" y="309" fill="rgba(255,0,60,0.5)">CWE-121 visualizer</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/timing-demo/" target="_blank">
+    <rect class="node-rect" x="490" y="280" width="130" height="34" fill="rgba(255,0,60,0.07)" stroke="#ff003c" filter="url(#node-glow)"/>
+    <text class="node-label" x="500" y="298" fill="#ff003c">TIMING SIDE-CHANNEL</text>
+    <text class="node-sub"   x="500" y="309" fill="rgba(255,0,60,0.5)">real benchmark</text>
+  </a>
+
+  <!-- AI / Theory row -->
+  <text class="layer-label" x="20" y="339">LAYER 3 — AI &amp; THEORY</text>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/sat-solver/" target="_blank">
+    <rect class="node-rect" x="390" y="372" width="120" height="34" fill="rgba(255,102,0,0.07)" stroke="#ff6600" filter="url(#node-glow)"/>
+    <text class="node-label" x="400" y="390" fill="#ff6600">P vs NP</text>
+    <text class="node-sub"   x="400" y="401" fill="rgba(255,102,0,0.5)">DPLL SAT solver</text>
+  </a>
+  <a class="node-link" href="https://noor-alhussain.github.io/Noor-AlHussain/atom/" target="_blank">
+    <rect class="node-rect" x="640" y="372" width="120" height="34" fill="rgba(255,102,0,0.07)" stroke="#ff6600" filter="url(#node-glow)"/>
+    <text class="node-label" x="650" y="390" fill="#ff6600">BABYLON PBR</text>
+    <text class="node-sub"   x="650" y="401" fill="rgba(255,102,0,0.5)">physics + WebXR</text>
+  </a>
+
+  <!-- Evidence / verification row -->
+  <text class="layer-label" x="20" y="432">LAYER 4 — EVIDENCE</text>
+  <a class="node-link" href="https://github.com/Noor-AlHussain/Noor-AlHussain/blob/main/data/research-log.yaml" target="_blank">
+    <rect class="node-rect" x="390" y="465" width="120" height="34" fill="rgba(0,255,255,0.07)" stroke="#00ffff" filter="url(#node-glow)"/>
+    <text class="node-label" x="400" y="483" fill="#00ffff">RESEARCH LOG</text>
+    <text class="node-sub"   x="400" y="494" fill="rgba(0,255,255,0.5)">data-driven, not static</text>
+  </a>
+  <a class="node-link" href="https://github.com/Noor-AlHussain/Noor-AlHussain/blob/main/assets/generated/dashboard.svg" target="_blank">
+    <rect class="node-rect" x="640" y="465" width="120" height="34" fill="rgba(0,255,255,0.07)" stroke="#00ffff" filter="url(#node-glow)"/>
+    <text class="node-label" x="650" y="483" fill="#00ffff">LIVE METRICS</text>
+    <text class="node-sub"   x="650" y="494" fill="rgba(0,255,255,0.5)">github API, daily</text>
+  </a>
+
+  <!-- Convergence node -->
+  <a class="node-link" href="https://github.com/Noor-AlHussain" target="_blank">
+    <rect class="node-rect" x="390" y="525" width="120" height="28" fill="rgba(138,43,226,0.1)" stroke="#8a2be2" filter="url(#node-glow)"/>
+    <text class="node-label" x="450" y="543" fill="#8a2be2" text-anchor="middle">@NOORHACK</text>
+  </a>
+
+  <text class="layer-label" x="880" y="552" text-anchor="end" opacity="0.5">every node above is a real link</text>
+</svg>

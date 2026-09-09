@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 260" width="440" height="260">
+  <defs>
+    <filter id="pg"><feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <style>
+      .scan{animation:scan-mv 2.4s linear infinite;}
+      @keyframes scan-mv{from{transform:translateX(-40px)}to{transform:translateX(480px)}}
+      .blink{animation:blk 1.4s step-end infinite;}
+      @keyframes blk{0%,100%{opacity:1}50%{opacity:.2}}
+    </style>
+  </defs>
+  <rect width="440" height="260" fill="#0a0812"/>
+  <rect x="0" y="0" width="440" height="1" fill="rgba(0,255,255,0.14)"/>
+  <rect x="0" y="259" width="440" height="1" fill="rgba(0,255,255,0.14)"/>
+  <rect x="0" y="0" width="2" height="260" fill="#00ffff" opacity=".25"/>
+  <!-- scanning bar -->
+  <rect class="scan" y="0" width="40" height="260"
+        fill="#00ffff" opacity="0.04"/>
+  <text x="220" y="124" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="11"
+        fill="#00ffff" letter-spacing="3" filter="url(#pg)">// LANGS INITIALIZING</text>
+  <text x="220" y="144" text-anchor="middle"
+        font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="9"
+        fill="rgba(232,232,240,0.3)" letter-spacing="2">awaiting first workflow run<tspan class="blink">_</tspan></text>
+</svg>

@@ -1,0 +1,217 @@
+name: Update README — Master Pipeline
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+# Prevent concurrent runs — cancel previous if a new one starts
+concurrency:
+  group: update-readme
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+
+  # ── 1. Contribution Snake ─────────────────────────────────────────────
+  update-snake:
+    name: Generate Contribution Snake
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Generate snake animation
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: Noor-AlHussain
+          outputs: |
+            assets/generated/snake.svg?color_snake=#00ffff&color_dots=#0a0812,#12101a,#1a1726,#8a2be2,#00ffff
+
+      - name: Commit snake SVG
+        uses: EndBug/add-and-commit@v9
+        with:
+          # update-snake, update-stats, and update-wakatime all run in
+          # parallel with no dependency on each other, and inject-easter-eggs
+          # only waits for two of those three — so every one of these five
+          # commit steps can race another job's push to the same branch.
+          # Without this, whichever push lands second gets rejected as
+          # non-fast-forward and the job fails outright, even though nothing
+          # about its own generated content was wrong. This is the officially
+          # documented fix for exactly this scenario.
+          pull: '--rebase --autostash'
+          push_attempts: 3
+          add: assets/generated/snake.svg
+          message: "ci: update contribution snake [skip ci]"
+          default_author: github_actions
+
+  # ── 2. GitHub Stats ───────────────────────────────────────────────────
+  update-stats:
+    name: Generate GitHub Stats
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate all stat SVGs
+        run: |
+          node scripts/generate-stats.js
+          node scripts/generate-streak.js
+          node scripts/generate-langs.js
+          node scripts/generate-heatmap.js
+          node scripts/generate-dashboard.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: Noor-AlHussain
+
+      - name: Commit generated stats
+        uses: EndBug/add-and-commit@v9
+        with:
+          pull: '--rebase --autostash'  # same race-condition fix as above
+          push_attempts: 3
+          add: assets/generated/
+          message: "ci: update github stats [skip ci]"
+          default_author: github_actions
+
+  # ── 3. WakaTime Activity ──────────────────────────────────────────────
+  update-wakatime:
+    name: Generate WakaTime Activity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Don't fail entire pipeline if WakaTime key is missing
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate WakaTime SVG
+        run: node scripts/update-wakatime.js
+        env:
+          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+
+      - name: Commit wakatime SVG
+        uses: EndBug/add-and-commit@v9
+        with:
+          pull: '--rebase --autostash'  # same race-condition fix as above
+          push_attempts: 3
+          add: assets/generated/wakatime.svg
+          message: "ci: update wakatime activity [skip ci]"
+          default_author: github_actions
+
+  # ── 4. Easter Eggs + Integrity Manifest + Research Log ────────────────
+  inject-easter-eggs:
+    name: Inject Easter Eggs & Verify Integrity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write        # required to mint the OIDC token for Sigstore/Fulcio
+      attestations: write    # required to publish the attestation to GitHub's store
+    needs: [update-snake, update-stats]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Inject easter eggs into SVG metadata
+        run: node scripts/encode-easter-eggs.js
+
+      # Real, independently verifiable SHA-256 manifest — not a signature,
+      # never claims to be one. See the script for the full rationale.
+      - name: Generate integrity manifest
+        run: node scripts/generate-integrity-manifest.js
+
+      # Self-check: fail this job loudly if the manifest we just generated
+      # doesn't actually verify, rather than silently committing a broken one.
+      - name: Verify the manifest we just generated
+        run: sha256sum -c assets/integrity-manifest.asc
+
+      # ── GitHub Artifact Attestations (Sigstore-backed) ────────────────
+      # This is the real upgrade over the manifest alone: a keyless,
+      # short-lived-certificate signature over the manifest's digest, bound
+      # to this exact workflow run's OIDC identity, issued by Sigstore's
+      # Fulcio CA, and recorded in the public Rekor transparency log.
+      # No private key is generated, stored, or rotated by this repo — the
+      # signing key lives for the duration of one step and is then discarded.
+      # This gives SLSA v1.0 Build Level 2 provenance for the manifest file:
+      # a public, unforgeable link between "this exact file" and "this exact
+      # GitHub Actions run, on this exact commit, in this exact repo."
+      - name: Attest integrity manifest provenance (Sigstore / Fulcio / Rekor)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'assets/integrity-manifest.asc'
+
+      - name: Render research log from data/research-log.yaml
+        run: node scripts/generate-research.js
+
+      - name: Commit updated SVGs, manifest, and research log
+        uses: EndBug/add-and-commit@v9
+        with:
+          pull: '--rebase --autostash'  # same race-condition fix as above
+          push_attempts: 3
+          add: "assets/svg/ assets/integrity-manifest.asc README.md"
+          message: "ci: inject easter eggs + refresh integrity manifest + research log [skip ci]"
+          default_author: github_actions
+
+  # ── 5. Badges — last build time + LOC counter ─────────────────────────
+  # Runs last and depends on every prior job so the timestamp reflects a
+  # fully completed pipeline, and the LOC count includes anything those
+  # jobs may have changed (e.g. injected easter-egg metadata).
+  update-badges:
+    name: Update README Badges
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [update-snake, update-stats, update-wakatime, inject-easter-eggs]
+    if: always() && !cancelled()
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update last-build and LOC badges
+        run: node scripts/update-readme-badges.js
+
+      - name: Commit README
+        uses: EndBug/add-and-commit@v9
+        with:
+          pull: '--rebase --autostash'  # same race-condition fix as above
+          push_attempts: 3
+          add: README.md
+          message: "ci: update build badges [skip ci]"
+          default_author: github_actions

@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # npm dependencies (root package.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Baghdad"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "deps(npm)"
+    ignore:
+      # Three.js — pin to r158 until all scenes are audited against API changes
+      - dependency-name: "three"
+        update-types: ["version-update:semver-major","version-update:semver-minor"]
+
+  # Cargo (Rust void-engine)
+  - package-ecosystem: "cargo"
+    directory: "/assets/canvas/rust-engine"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Baghdad"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "deps(cargo)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Baghdad"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions)"

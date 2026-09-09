@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg    { fill: #0a0812; }
+      .ring  { fill: none; stroke: rgba(0,255,255,0.08); stroke-width: 1; }
+      .axis  { stroke: rgba(0,255,255,0.10); stroke-width: 1; }
+      .axis-label {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 11px;
+        fill: rgba(232,232,240,0.55);
+        letter-spacing: 0.12em;
+      }
+      .axis-label-hi {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 11px;
+        fill: #00ffff;
+        letter-spacing: 0.12em;
+      }
+      .ring-pct {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 8px;
+        fill: rgba(0,255,255,0.22);
+      }
+      .title {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 10px;
+        fill: rgba(0,255,255,0.28);
+        letter-spacing: 0.35em;
+      }
+      /* Skill polygon draw-in then pulse */
+      .skill-fill {
+        fill: rgba(0,255,255,0.07);
+        stroke: #00ffff;
+        stroke-width: 2;
+        stroke-linejoin: round;
+        filter: url(#poly-glow);
+        stroke-dasharray: 1500;
+        stroke-dashoffset: 1500;
+        animation: poly-draw 2.8s cubic-bezier(0.4,0,0.2,1) 0.3s forwards,
+                   poly-pulse 4s 3.2s ease-in-out infinite;
+      }
+      /* Target polygon (what to aim for) */
+      .target-fill {
+        fill: none;
+        stroke: rgba(138,43,226,0.3);
+        stroke-width: 1;
+        stroke-dasharray: 6 4;
+        stroke-linejoin: round;
+      }
+      .node {
+        fill: #00ffff;
+        filter: url(#node-glow);
+        opacity: 0;
+        animation: node-appear 0.3s ease-out forwards;
+      }
+      .n0{animation-delay:2.8s} .n1{animation-delay:2.9s} .n2{animation-delay:3.0s}
+      .n3{animation-delay:3.1s} .n4{animation-delay:3.2s} .n5{animation-delay:3.3s}
+      .n6{animation-delay:3.4s} .n7{animation-delay:3.5s}
+
+      @keyframes poly-draw  { to { stroke-dashoffset: 0; } }
+      @keyframes poly-pulse {
+        0%,100% { fill: rgba(0,255,255,0.07); stroke: #00ffff; }
+        50%      { fill: rgba(0,255,255,0.13); stroke: rgba(0,255,255,0.8); }
+      }
+      @keyframes node-appear {
+        from { opacity:0; r:2; }
+        to   { opacity:1; r:6; }
+      }
+    </style>
+
+    <filter id="poly-glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="node-glow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect class="bg" width="500" height="500"/>
+
+  <!-- Grid rings — mathematically correct 8-sided polygons -->
+  <!-- 25% ring -->
+  <polygon class="ring" points="250.0,206.2 280.9,219.1 293.8,250.0 280.9,280.9 250.0,293.8 219.1,280.9 206.2,250.0 219.1,219.1"/>
+  <!-- 50% ring -->
+  <polygon class="ring" points="250.0,162.5 311.9,188.1 337.5,250.0 311.9,311.9 250.0,337.5 188.1,311.9 162.5,250.0 188.1,188.1"/>
+  <!-- 75% ring -->
+  <polygon class="ring" points="250.0,118.8 342.8,157.2 381.2,250.0 342.8,342.8 250.0,381.2 157.2,342.8 118.8,250.0 157.2,157.2"/>
+  <!-- 100% ring -->
+  <polygon class="ring" points="250.0,75.0 373.7,126.3 425.0,250.0 373.7,373.7 250.0,425.0 126.3,373.7 75.0,250.0 126.3,126.3"/>
+
+  <!-- Percentage labels on KERNEL axis -->
+  <text class="ring-pct" x="252" y="204">25</text>
+  <text class="ring-pct" x="252" y="160">50</text>
+  <text class="ring-pct" x="252" y="116">75</text>
+  <text class="ring-pct" x="252" y="72">100</text>
+
+  <!-- Axis lines -->
+  <line class="axis" x1="250" y1="75"  x2="250" y2="425"/>  <!-- Kernel ↔ Mobile -->
+  <line class="axis" x1="373.7" y1="126.3" x2="126.3" y2="373.7"/>  <!-- Security ↔ Hardware -->
+  <line class="axis" x1="425" y1="250" x2="75"  y2="250"/>  <!-- AI ↔ Lang -->
+  <line class="axis" x1="373.7" y1="373.7" x2="126.3" y2="126.3"/>  <!-- Web ↔ Crypto -->
+
+  <!-- Target polygon (max 100%) -->
+  <polygon class="target-fill"
+    points="250.0,75.0 373.7,126.3 425.0,250.0 373.7,373.7 250.0,425.0 126.3,373.7 75.0,250.0 126.3,126.3"/>
+
+  <!-- Skill polygon — mathematically correct points -->
+  <polygon class="skill-fill"
+    points="250.0,83.8 363.8,136.2 404.0,250.0 351.5,351.5 250.0,386.5 138.6,361.4 101.2,250.0 151.0,151.0"/>
+
+  <!-- Axis labels -->
+  <text class="axis-label-hi" x="250.0" y="45.0" text-anchor="middle">KERNEL</text>
+  <text class="axis-label"    x="393.3" y="110.7" text-anchor="start">SECURITY</text>
+  <text class="axis-label"    x="451.0" y="254.0" text-anchor="start">AI</text>
+  <text class="axis-label"    x="393.3" y="396.3" text-anchor="start">WEB</text>
+  <text class="axis-label"    x="250.0" y="465.0" text-anchor="middle">MOBILE</text>
+  <text class="axis-label"    x="106.7" y="396.3" text-anchor="end">HARDWARE</text>
+  <text class="axis-label"    x="49.0"  y="254.0" text-anchor="end">LANG</text>
+  <text class="axis-label"    x="106.7" y="110.7" text-anchor="end">CRYPTO</text>
+
+  <!-- Score values on each axis -->
+  <text class="ring-pct" x="254" y="87"  fill="rgba(0,255,255,0.5)">95%</text>
+  <text class="ring-pct" x="366" y="133" fill="rgba(0,255,255,0.4)">92%</text>
+  <text class="ring-pct" x="407" y="247" fill="rgba(0,255,255,0.4)">88%</text>
+  <text class="ring-pct" x="354" y="348" fill="rgba(0,255,255,0.4)">82%</text>
+  <text class="ring-pct" x="254" y="383" fill="rgba(0,255,255,0.4)">78%</text>
+  <text class="ring-pct" x="100" y="358" fill="rgba(0,255,255,0.4)" text-anchor="end">90%</text>
+  <text class="ring-pct" x="98"  y="247" fill="rgba(0,255,255,0.4)" text-anchor="end">85%</text>
+  <text class="ring-pct" x="148" y="148" fill="rgba(0,255,255,0.4)" text-anchor="end">80%</text>
+
+  <!-- Vertex nodes -->
+  <circle class="node n0" cx="250.0" cy="83.8"/>
+  <circle class="node n1" cx="363.8" cy="136.2"/>
+  <circle class="node n2" cx="404.0" cy="250.0"/>
+  <circle class="node n3" cx="351.5" cy="351.5"/>
+  <circle class="node n4" cx="250.0" cy="386.5"/>
+  <circle class="node n5" cx="138.6" cy="361.4"/>
+  <circle class="node n6" cx="101.2" cy="250.0"/>
+  <circle class="node n7" cx="151.0" cy="151.0"/>
+
+  <!-- Center -->
+  <circle cx="250" cy="250" r="3" fill="rgba(0,255,255,0.4)"/>
+
+  <!-- Title -->
+  <text class="title" x="250" y="492" text-anchor="middle">// SKILL RADAR — NOORHACK</text>
+</svg>

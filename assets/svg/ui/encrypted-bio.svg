@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 60" width="900" height="60">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      </style>
+  </defs>
+  <foreignObject width="900" height="60">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        .enc{
+          width:900px;height:60px;
+          background:#0a0812;
+          display:flex;align-items:center;justify-content:center;
+          font-family:'Share Tech Mono','Courier New',Courier,monospace;
+          font-size:14px;letter-spacing:0.15em;
+          color:rgba(0,255,255,0.85);
+          position:relative;overflow:hidden;
+        }
+        .enc-text { position:absolute; }
+        /* Scrambled version shows first, then fades revealing decoded */
+        .scrambled{
+          color:rgba(0,255,255,0.5);
+          animation: scramble-cycle 6s ease-in-out infinite;
+        }
+        .decoded{
+          color:rgba(232,232,240,0.9);
+          animation: decode-cycle 6s ease-in-out infinite;
+        }
+        @keyframes scramble-cycle {
+          0%,10%  { opacity:1; }
+          40%,60% { opacity:0; }
+          90%,100%{ opacity:1; }
+        }
+        @keyframes decode-cycle {
+          0%,10%  { opacity:0; }
+          40%,60% { opacity:1; }
+          90%,100%{ opacity:0; }
+        }
+      </style>
+      <div class="enc">
+        <span class="enc-text scrambled">
+          !@#$%^&amp; 4e6f6f72 // &lt;SEC:0x1A&gt; %^&amp;*()_+{}|:"&lt;&gt;? 0x4B45524e 41&amp;#;@!
+        </span>
+        <span class="enc-text decoded">
+          Security Researcher &amp; Software Engineer — Republic of Iraq — Silicon to AI
+        </span>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

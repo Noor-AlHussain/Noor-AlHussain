@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 50" width="900" height="50">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      .bg{fill:#0a0812;}
+      .base{font-family:'Share Tech Mono','Courier New',Courier,monospace;
+            font-size:16px;font-weight:700;}
+      .A{fill:#00ff41;} .T{fill:#ff6600;} .C{fill:#00ffff;} .G{fill:#8a2be2;}
+      .seq{animation:scroll-left 22s linear infinite;}
+      @keyframes scroll-left{from{transform:translateX(0)}to{transform:translateX(-450px)}}
+    </style>
+    <linearGradient id="fadeL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0812" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0a0812" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fadeR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0812" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0812" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <rect class="bg" width="900" height="50"/>
+
+  <!-- Two copies side by side for seamless scroll loop -->
+  <g class="seq">
+    <text class="base" y="32" x="0">
+      <tspan class="A">A</tspan><tspan class="T">T</tspan><tspan class="C">C</tspan><tspan class="G">G</tspan>
+      <tspan dx="6" class="G">G</tspan><tspan class="C">C</tspan><tspan class="T">T</tspan><tspan class="A">A</tspan>
+      <tspan dx="6" class="T">T</tspan><tspan class="A">A</tspan><tspan class="G">G</tspan><tspan class="C">C</tspan>
+      <tspan dx="6" class="C">C</tspan><tspan class="G">G</tspan><tspan class="A">A</tspan><tspan class="T">T</tspan>
+      <tspan dx="6" class="A">A</tspan><tspan class="C">C</tspan><tspan class="T">T</tspan><tspan class="G">G</tspan>
+      <tspan dx="6" class="G">G</tspan><tspan class="T">T</tspan><tspan class="C">C</tspan><tspan class="A">A</tspan>
+      <tspan dx="6" class="T">T</tspan><tspan class="G">G</tspan><tspan class="A">A</tspan><tspan class="C">C</tspan>
+      <tspan dx="6" class="C">C</tspan><tspan class="A">A</tspan><tspan class="T">T</tspan><tspan class="G">G</tspan>
+    </text>
+    <text class="base" y="32" x="450">
+      <tspan class="A">A</tspan><tspan class="T">T</tspan><tspan class="C">C</tspan><tspan class="G">G</tspan>
+      <tspan dx="6" class="G">G</tspan><tspan class="C">C</tspan><tspan class="T">T</tspan><tspan class="A">A</tspan>
+      <tspan dx="6" class="T">T</tspan><tspan class="A">A</tspan><tspan class="G">G</tspan><tspan class="C">C</tspan>
+      <tspan dx="6" class="C">C</tspan><tspan class="G">G</tspan><tspan class="A">A</tspan><tspan class="T">T</tspan>
+      <tspan dx="6" class="A">A</tspan><tspan class="C">C</tspan><tspan class="T">T</tspan><tspan class="G">G</tspan>
+      <tspan dx="6" class="G">G</tspan><tspan class="T">T</tspan><tspan class="C">C</tspan><tspan class="A">A</tspan>
+      <tspan dx="6" class="T">T</tspan><tspan class="G">G</tspan><tspan class="A">A</tspan><tspan class="C">C</tspan>
+      <tspan dx="6" class="C">C</tspan><tspan class="A">A</tspan><tspan class="T">T</tspan><tspan class="G">G</tspan>
+    </text>
+  </g>
+
+  <!-- Edge fades -->
+  <rect width="60" height="50" fill="url(#fadeL)"/>
+  <rect x="840" width="60" height="50" fill="url(#fadeR)"/>
+</svg>

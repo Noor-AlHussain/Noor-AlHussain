@@ -1,0 +1,43 @@
+{
+  "name": "noor-alhussain-profile",
+  "version": "1.0.0",
+  "description": "GitHub Profile README \u2014 Noor AlHussain",
+  "type": "module",
+  "scripts": {
+    "bootstrap": "node scripts/bootstrap-placeholders.js && python3 scripts/bootstrap-preview-placeholders.py",
+    "generate:stats": "node scripts/generate-stats.js",
+    "generate:streak": "node scripts/generate-streak.js",
+    "generate:langs": "node scripts/generate-langs.js",
+    "generate:heatmap": "node scripts/generate-heatmap.js",
+    "generate:dashboard": "node scripts/generate-dashboard.js",
+    "generate:wakatime": "node scripts/update-wakatime.js",
+    "generate:skills": "node scripts/build-skills-json.js",
+    "generate:all": "npm run generate:stats && npm run generate:streak && npm run generate:langs && npm run generate:heatmap && npm run generate:dashboard && npm run generate:wakatime",
+    "render:3d": "node scripts/render-3d.js",
+    "easter": "node scripts/encode-easter-eggs.js",
+    "render:all": "npm run render:3d && npm run easter",
+    "loc": "node scripts/count-loc.js",
+    "badges:update": "node scripts/update-readme-badges.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:visual": "node tests/visual-regression.js",
+    "generate:integrity": "node scripts/generate-integrity-manifest.js",
+    "generate:research": "node scripts/generate-research.js",
+    "verify:integrity": "sha256sum -c assets/integrity-manifest.asc",
+    "validate:resume": "node -e \"JSON.parse(require('fs').readFileSync('resume.json','utf8')); console.log('resume.json is valid JSON')\""
+  },
+  "dependencies": {
+    "@octokit/graphql": "^7.0.0",
+    "svgo": "^3.0.0",
+    "upng-js": "^2.1.0",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "puppeteer": "^21.0.0",
+    "vitest": "^1.2.0",
+    "pixelmatch": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.0",
+    "pngjs": "^7.0.0",
+    "glob": "^10.3.0"
+  }
+}

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Skill Universe — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    canvas{display:block;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #labels-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.1em;font-size:12px;max-width:480px;line-height:1.6;}
+    .nl{position:absolute;transform:translate(-50%,-50%);
+      font-family:'Share Tech Mono',monospace;letter-spacing:.12em;
+      white-space:nowrap;pointer-events:none;transition:opacity .3s;}
+    .nl.domain{font-size:12px;font-weight:700;}
+    .nl.skill {font-size:9px; opacity:.7;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">OGL — MINIMAL WEBGL</div>
+  <div id="label">// SKILL UNIVERSE — DRAG TO ROTATE</div>
+  <div id="labels-layer"></div>
+  <canvas id="c" role="img" aria-label="Interactive 3D skill universe — clustered spheres representing skill domains and individual skills, connected by lines, auto-rotating around a shared center; drag to rotate manually"></canvas>
+  <div id="fallback">
+    <p>This scene needs WebGL, which isn't available in this browser or has been disabled.<br/>
+    Try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration enabled.</p>
+  </div>
+
+  <!-- OGL — minimal WebGL library ~50KB -->
+  <script type="module">
+  import { Renderer, Camera, Transform, Program, Mesh, Sphere,
+           Geometry, Vec3, Color, Orbit } from
+    'https://cdn.jsdelivr.net/npm/ogl@1.0.3/src/index.js';
+
+  const W = innerWidth, H = innerHeight;
+  const canvasEl = document.getElementById('c');
+  let renderer, gl;
+  try {
+    renderer = new Renderer({ canvas: canvasEl,
+      width:W, height:H, dpr:Math.min(devicePixelRatio,2), antialias:true });
+    gl = renderer.gl;
+    if (!gl) throw new Error('OGL Renderer did not produce a WebGL context');
+    gl.clearColor(0.039,0.031,0.071,1);
+  } catch (e) {
+    document.getElementById('fallback').style.display = 'flex';
+    canvasEl.style.display = 'none';
+    throw new Error('WebGL unavailable for skill-universe: ' + e.message);
+  }
+
+  const camera = new Camera(gl, { fov:55 });
+  camera.position.set(0,4,28);
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const controls = new Orbit(camera, {
+    element: renderer.gl.canvas,
+    target: new Vec3(0,0,0),
+    autoRotate: !reduceMotion,
+    autoRotateSpeed: 0.3,
+  });
+
+  const scene = new Transform();
+
+  // ── Shaders ────────────────────────────────────────────────────────
+  const VERT=`
+attribute vec3 position;
+attribute vec3 normal;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
+uniform float uSize;
+varying vec3 vNormal;
+void main(){
+  vNormal=normalize(normalMatrix*normal);
+  gl_Position=projectionMatrix*modelViewMatrix*vec4(position*uSize,1.0);
+}`;
+  const FRAG=`
+precision highp float;
+uniform vec3 uColor;
+uniform float uActivation;
+varying vec3 vNormal;
+void main(){
+  float rim=1.0-max(dot(vNormal,vec3(0,0,1)),0.0);
+  vec3 col=uColor*(0.3+uActivation*0.7);
+  col+=uColor*rim*0.5*(0.5+uActivation*0.5);
+  col=mix(col,vec3(1.0),rim*0.15);
+  float alpha=0.7+uActivation*0.3;
+  gl_FragColor=vec4(col,alpha);
+}`;
+
+  // Line shader
+  const LVERT=`
+attribute vec3 position;
+attribute float aActivity;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+varying float vAct;
+void main(){vAct=aActivity;gl_Position=projectionMatrix*viewMatrix*vec4(position,1.0);}`;
+  const LFRAG=`
+precision highp float;
+varying float vAct;
+void main(){
+  float a=0.08+vAct*0.25;
+  gl_FragColor=vec4(0.0,a,a,a*1.5);
+}`;
+
+  const sphereGeo = new Sphere(gl, {radius:1, widthSegments:16, heightSegments:16});
+
+  // ── Node data ──────────────────────────────────────────────────────
+  const NODES=[
+    {id:'kernel',  label:'KERNEL',   type:'domain', col:[0,1,1],        size:0.85, x:0,   y:0,   z:0},
+    {id:'sec',     label:'SECURITY', type:'domain', col:[1,0,0.24],     size:0.85, x:0,   y:0,   z:0},
+    {id:'ai',      label:'AI',       type:'domain', col:[1,0.4,0],      size:0.8,  x:0,   y:0,   z:0},
+    {id:'web',     label:'WEB',      type:'domain', col:[0.54,0.17,0.89],size:0.8, x:0,   y:0,   z:0},
+    {id:'hw',      label:'HARDWARE', type:'domain', col:[0,1,0.25],     size:0.8,  x:0,   y:0,   z:0},
+    {id:'lang',    label:'LANG',     type:'domain', col:[1,1,1],        size:0.7,  x:0,   y:0,   z:0},
+    // Skills
+    {id:'c',      label:'C',        type:'skill', col:[0,0.8,0.9],   size:0.32, parent:'kernel'},
+    {id:'cpp',    label:'C++',      type:'skill', col:[0,0.7,0.8],   size:0.32, parent:'kernel'},
+    {id:'asm',    label:'ASM',      type:'skill', col:[0,0.6,0.7],   size:0.28, parent:'kernel'},
+    {id:'linux',  label:'Linux',    type:'skill', col:[0,0.5,0.6],   size:0.30, parent:'kernel'},
+    {id:'pwn',    label:'PWN',      type:'skill', col:[1,0,0.3],     size:0.32, parent:'sec'},
+    {id:'re',     label:'RE',       type:'skill', col:[1,0.1,0.4],   size:0.32, parent:'sec'},
+    {id:'vuln',   label:'VULN',     type:'skill', col:[1,0.2,0.5],   size:0.28, parent:'sec'},
+    {id:'crypto', label:'CRYPTO',   type:'skill', col:[1,0.3,0.6],   size:0.26, parent:'sec'},
+    {id:'ml',     label:'ML',       type:'skill', col:[1,0.5,0.1],   size:0.30, parent:'ai'},
+    {id:'py',     label:'Python',   type:'skill', col:[1,0.6,0.2],   size:0.32, parent:'ai'},
+    {id:'torch',  label:'PyTorch',  type:'skill', col:[1,0.65,0.3],  size:0.28, parent:'ai'},
+    {id:'cuda',   label:'CUDA',     type:'skill', col:[1,0.7,0.4],   size:0.26, parent:'ai'},
+    {id:'react',  label:'React',    type:'skill', col:[0.6,0.2,0.9], size:0.30, parent:'web'},
+    {id:'fapi',   label:'FastAPI',  type:'skill', col:[0.7,0.3,1],   size:0.28, parent:'web'},
+    {id:'flutter',label:'Flutter',  type:'skill', col:[0.8,0.4,1],   size:0.28, parent:'web'},
+    {id:'wgpu',   label:'WebGPU',   type:'skill', col:[0.65,0.25,0.95],size:0.28,parent:'web'},
+    {id:'jtag',   label:'JTAG',     type:'skill', col:[0,0.9,0.3],   size:0.28, parent:'hw'},
+    {id:'uefi',   label:'UEFI',     type:'skill', col:[0,0.8,0.25],  size:0.26, parent:'hw'},
+    {id:'fw',     label:'Firmware', type:'skill', col:[0,0.7,0.2],   size:0.28, parent:'hw'},
+    {id:'rust',   label:'Rust',     type:'skill', col:[0.9,0.9,0.9], size:0.30, parent:'lang'},
+    {id:'llvm',   label:'LLVM',     type:'skill', col:[0.8,0.8,0.8], size:0.26, parent:'lang'},
+    {id:'comp',   label:'Compiler', type:'skill', col:[0.7,0.7,0.7], size:0.28, parent:'lang'},
+    {id:'wasm',   label:'WASM',     type:'skill', col:[0.65,0.65,0.65],size:0.26,parent:'lang'},
+  ];
+  const nodeMap = Object.fromEntries(NODES.map(n=>[n.id,n]));
+
+  // Random initial positions
+  NODES.forEach(n=>{
+    if(!n.parent){
+      n.x=(Math.random()-.5)*14; n.y=(Math.random()-.5)*10; n.z=(Math.random()-.5)*14;
+    } else {
+      n.x=(Math.random()-.5)*4; n.y=(Math.random()-.5)*4; n.z=(Math.random()-.5)*4;
+    }
+    n.vx=0; n.vy=0; n.vz=0;
+  });
+
+  // 3D force simulation
+  for(let s=0;s<180;s++){
+    // Repulsion
+    for(let i=0;i<NODES.length;i++){
+      for(let j=i+1;j<NODES.length;j++){
+        const a=NODES[i],b=NODES[j];
+        const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
+        const d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
+        const f=55/(d*d);
+        const fx=dx/d*f,fy=dy/d*f,fz=dz/d*f;
+        a.vx-=fx;a.vy-=fy;a.vz-=fz;
+        b.vx+=fx;b.vy+=fy;b.vz+=fz;
+      }
+    }
+    // Attraction toward parent
+    NODES.filter(n=>n.parent).forEach(n=>{
+      const p=nodeMap[n.parent];
+      const dx=p.x-n.x,dy=p.y-n.y,dz=p.z-n.z;
+      const d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
+      const target=5,f=(d-target)*0.35;
+      const fx=dx/d*f,fy=dy/d*f,fz=dz/d*f;
+      n.vx+=fx;n.vy+=fy;n.vz+=fz;
+      p.vx-=fx*.3;p.vy-=fy*.3;p.vz-=fz*.3;
+    });
+    // Center gravity
+    NODES.forEach(n=>{
+      n.vx-=n.x*.025;n.vy-=n.y*.025;n.vz-=n.z*.025;
+      n.vx*=0.82;n.vy*=0.82;n.vz*=0.82;
+      n.x+=n.vx;n.y+=n.vy;n.z+=n.vz;
+    });
+  }
+
+  // ── Build OGL meshes ───────────────────────────────────────────────
+  const meshes=[];
+  NODES.forEach(n=>{
+    const prog=new Program(gl,{vertex:VERT,fragment:FRAG,
+      uniforms:{
+        uColor:{value:new Color(...n.col)},
+        uSize:{value:n.size},
+        uActivation:{value:n.type==='domain'?0.6:0.3},
+      },
+      transparent:true,cullFace:false,
+    });
+    const mesh=new Mesh(gl,{geometry:sphereGeo,program:prog});
+    mesh.position.set(n.x,n.y,n.z);
+    mesh.setParent(scene);
+    n.mesh=mesh; n.prog=prog;
+    meshes.push(n);
+  });
+
+  // ── Build edge lines ───────────────────────────────────────────────
+  const edgeLinks=[];
+  NODES.filter(n=>n.parent).forEach(n=>{
+    const p=nodeMap[n.parent];
+    edgeLinks.push({from:p,to:n});
+  });
+
+  // Build all edges as single geometry
+  const edgePts=edgeLinks.flatMap(e=>[e.from.x,e.from.y,e.from.z,e.to.x,e.to.y,e.to.z]);
+  const edgeActs=new Float32Array(edgePts.length/3).fill(0.1);
+  const edgeGeo=new Geometry(gl,{
+    position:{size:3,data:new Float32Array(edgePts)},
+    aActivity:{size:1,data:edgeActs},
+  });
+  const edgeProg=new Program(gl,{vertex:LVERT,fragment:LFRAG,
+    transparent:true,cullFace:false});
+  const edgeMesh=new Mesh(gl,{geometry:edgeGeo,program:edgeProg,
+    mode:gl.LINES});
+  edgeMesh.setParent(scene);
+
+  // ── CSS labels ────────────────────────────────────────────────────
+  const labelsDiv=document.getElementById('labels-layer');
+  const labelEls={};
+  NODES.forEach(n=>{
+    const el=document.createElement('div');
+    el.className=`nl ${n.type}`;
+    el.textContent=n.label;
+    el.style.color=`rgb(${n.col.map(v=>Math.round(v*255)).join(',')})`;
+    labelsDiv.appendChild(el);
+    labelEls[n.id]=el;
+  });
+
+  // ── Animate ────────────────────────────────────────────────────────
+  let t=0;
+  const tempV=new Vec3();
+
+  function update(dt){
+    t+=dt;
+    controls.update();
+
+    // Pulse domain nodes
+    NODES.filter(n=>n.type==='domain').forEach((n,i)=>{
+      const act=0.5+0.2*Math.sin(t*1.5+i);
+      n.prog.uniforms.uActivation.value=act;
+      const s=n.size*(1+act*0.12);
+      n.mesh.scale.set(s,s,s);
+    });
+
+    // Project labels to screen
+    const proj=camera.projectionMatrix;
+    const view=camera.viewMatrix;
+
+    NODES.forEach(n=>{
+      const el=labelEls[n.id];
+      // Project world pos to NDC
+      const wx=n.x,wy=n.y,wz=n.z;
+      const vx=view[0]*wx+view[4]*wy+view[8]*wz+view[12];
+      const vy=view[1]*wx+view[5]*wy+view[9]*wz+view[13];
+      const vz=view[2]*wx+view[6]*wy+view[10]*wz+view[14];
+      const vw=view[3]*wx+view[7]*wy+view[11]*wz+view[15];
+      const cx=proj[0]*vx+proj[4]*vy+proj[8]*vz+proj[12]*vw;
+      const cy=proj[1]*vx+proj[5]*vy+proj[9]*vz+proj[13]*vw;
+      const cw=proj[3]*vx+proj[7]*vy+proj[11]*vz+proj[15]*vw;
+      if(cw<=0){el.style.opacity='0';return;}
+      const sx=( cx/cw*.5+.5)*innerWidth;
+      const sy=(-cy/cw*.5+.5)*innerHeight;
+      // Offset label up by node radius
+      el.style.left=sx+'px';
+      el.style.top =(sy-(n.size*20))+'px';
+      el.style.opacity= n.type==='domain'?'0.9':'0.55';
+    });
+
+    renderer.render({scene,camera});
+  }
+
+  let last=performance.now();
+  function frame(now){
+    requestAnimationFrame(frame);
+    update(reduceMotion ? 0 : Math.min((now-last)*0.001,0.05));
+    last=now;
+  }
+  requestAnimationFrame(frame);
+
+  window.addEventListener('resize',()=>{
+    renderer.setSize(innerWidth,innerHeight);
+    camera.perspective({aspect:innerWidth/innerHeight});
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+name: Deploy GitHub Pages — 3D Canvas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/canvas/**"
+      - "assets/portal/**"
+      - "assets/previews/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages:    write
+  id-token: write
+
+jobs:
+  build:
+    name: Build Canvas Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Cache node modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build skills data
+        run: node scripts/build-skills-json.js
+
+      # ── Rust → WASM build ────────────────────────────────────────────
+      # Builds independently of the Node toolchain above; failure here is
+      # isolated with continue-on-error so a Rust regression never blocks
+      # the rest of the portfolio from deploying.
+      - name: Install Rust toolchain
+        if: hashFiles('assets/canvas/rust-engine/Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust build
+        if: hashFiles('assets/canvas/rust-engine/Cargo.toml') != ''
+        uses: actions/cache@v5
+        with:
+          path: |
+            assets/canvas/rust-engine/target
+            ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-${{ hashFiles('assets/canvas/rust-engine/Cargo.lock') }}
+
+      - name: Install wasm-pack
+        if: hashFiles('assets/canvas/rust-engine/Cargo.toml') != ''
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build void-engine (Rust -> WASM)
+        if: hashFiles('assets/canvas/rust-engine/Cargo.toml') != ''
+        continue-on-error: true
+        working-directory: assets/canvas/rust-engine
+        run: wasm-pack build --target web --release --out-dir pkg
+
+      # ── Assemble static output ──────────────────────────────────────
+      - name: Assemble dist directory
+        run: |
+          mkdir -p dist
+          cp -r assets/canvas/atom-3d        dist/atom
+          cp -r assets/canvas/dna-3d         dist/dna
+          cp -r assets/canvas/particle-field dist/particles
+          cp -r assets/canvas/skill-universe dist/universe
+          cp -r assets/canvas/hologram-cube  dist/hologram
+          cp -r assets/canvas/neural-net     dist/neural
+          cp -r assets/canvas/wormhole       dist/wormhole
+          cp -r assets/canvas/cpu-die        dist/cpu
+
+          # Functional tools + system map — these folder names match their
+          # README/portal URL slugs exactly, no renaming needed. Previously
+          # missing from this list entirely, which meant every link to them
+          # 404'd on the live site despite being referenced throughout
+          # README.md and the portal — fixed as part of the WCAG/attestation
+          # pass rather than left for someone to discover by clicking a dead link.
+          cp -r assets/canvas/compiler-playground dist/compiler-playground
+          cp -r assets/canvas/memory-visualizer   dist/memory-visualizer
+          cp -r assets/canvas/timing-demo         dist/timing-demo
+          cp -r assets/canvas/sat-solver          dist/sat-solver
+          cp -r assets/canvas/system-map          dist/system-map
+
+          # rust-engine — copy even if pkg/ build failed; index.html shows
+          # a graceful WebGPU-unavailable / build-pending message either way
+          mkdir -p dist/rust-engine
+          cp -r assets/canvas/rust-engine/index.html dist/rust-engine/
+          if [ -d assets/canvas/rust-engine/pkg ]; then
+            cp -r assets/canvas/rust-engine/pkg dist/rust-engine/pkg
+          fi
+
+      - name: Copy portal shell + previews
+        run: |
+          cp assets/portal/index.html dist/index.html
+          [ -f assets/portal/sw.js ]      && cp assets/portal/sw.js      dist/sw.js
+          [ -f assets/portal/og-card.svg ]&& cp assets/portal/og-card.svg dist/og-card.svg
+          mkdir -p dist/previews
+          [ -d assets/previews ] && cp -r assets/previews/. dist/previews/ 2>/dev/null || true
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url:  ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages:    write
+      id-token: write
+    steps:
+      - name: Deploy
+        id:   deployment
+        uses: actions/deploy-pages@v5
