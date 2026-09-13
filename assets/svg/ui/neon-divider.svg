@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 24" width="900" height="24">
+  <defs>
+    <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="rgba(0,255,255,0)"/>
+      <stop offset="20%"  stop-color="rgba(0,255,255,0.7)"/>
+      <stop offset="50%"  stop-color="rgba(138,43,226,1)"/>
+      <stop offset="80%"  stop-color="rgba(0,255,255,0.7)"/>
+      <stop offset="100%" stop-color="rgba(0,255,255,0)"/>
+    </linearGradient>
+    <filter id="line-glow" x="-2%" y="-200%" width="104%" height="500%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="dot-glow" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="900" height="24" fill="#0a0812"/>
+
+  <!-- Main line -->
+  <line x1="0" y1="12" x2="900" y2="12"
+        stroke="url(#line-grad)" stroke-width="1" filter="url(#line-glow)">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite"
+             calcMode="spline" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/>
+  </line>
+
+  <!-- Center diamond — now rotates -->
+  <rect x="447" y="8" width="6" height="6" fill="#8a2be2" filter="url(#dot-glow)" class="reduced-motion-hide">
+    <animateTransform attributeName="transform" type="rotate"
+                      from="45 450 11" to="405 450 11" dur="4s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Traveling dot — easeInOut with opacity fade on edges -->
+  <circle cy="12" r="3" fill="#00ffff" filter="url(#dot-glow)" class="reduced-motion-hide">
+    <animate attributeName="cx"      values="-10;910"    dur="3s" repeatCount="indefinite"
+             calcMode="spline" keySplines="0.4 0 0.6 1"/>
+    <animate attributeName="opacity" values="0;1;1;0"    dur="3s" repeatCount="indefinite"
+             keyTimes="0;0.08;0.92;1"/>
+  </circle>
+
+  <!-- Second dot going opposite direction -->
+  <circle cy="12" r="2" fill="rgba(138,43,226,0.8)" filter="url(#dot-glow)" class="reduced-motion-hide">
+    <animate attributeName="cx"      values="910;-10"   dur="4.5s" repeatCount="indefinite"
+             calcMode="spline" keySplines="0.4 0 0.6 1"/>
+    <animate attributeName="opacity" values="0;0.8;0.8;0" dur="4.5s" repeatCount="indefinite"
+             keyTimes="0;0.07;0.93;1"/>
+  </circle>
+  <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  /* The four shapes below use SMIL (animate/animateTransform), a separate
+     animation system the block above cannot reach — hidden outright
+     under reduced motion instead. */
+  @media (prefers-reduced-motion: reduce) {
+    .reduced-motion-hide { display: none; }
+  }
+  </style>
+</svg>

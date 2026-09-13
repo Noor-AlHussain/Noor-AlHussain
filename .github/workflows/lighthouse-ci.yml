@@ -1,0 +1,88 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/canvas/**"
+      - "assets/portal/**"
+      - "lighthouserc.json"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    steps:
+      # LHCI compares against ancestor commits to compute score deltas.
+      # A shallow clone (the actions/checkout default) breaks that
+      # comparison outright — this is a documented, easy-to-miss gotcha,
+      # not a hypothetical one, so it's set explicitly rather than left
+      # to the default.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 20
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build skills data
+        run: node scripts/build-skills-json.js
+
+      # Same assembly logic as deploy-pages.yml — kept in sync manually
+      # since GitHub Actions has no first-class "shared step list" across
+      # workflow files without a separate composite action.
+      - name: Assemble dist directory
+        run: |
+          mkdir -p dist
+          cp -r assets/canvas/atom-3d              dist/atom
+          cp -r assets/canvas/dna-3d               dist/dna
+          cp -r assets/canvas/particle-field       dist/particles
+          cp -r assets/canvas/skill-universe       dist/universe
+          cp -r assets/canvas/hologram-cube        dist/hologram
+          cp -r assets/canvas/neural-net           dist/neural
+          cp -r assets/canvas/wormhole             dist/wormhole
+          cp -r assets/canvas/cpu-die              dist/cpu
+
+          # rust-engine has no Rust toolchain step in this workflow (unlike
+          # deploy-pages.yml), so pkg/ never exists here — index.html alone
+          # is enough for Lighthouse: without pkg/, the page shows its real
+          # WebGPU-unavailable fallback UI, which is exactly what's being
+          # audited for accessibility now that lighthouserc.json includes it.
+          mkdir -p dist/rust-engine
+          cp assets/canvas/rust-engine/index.html  dist/rust-engine/
+
+          cp -r assets/canvas/compiler-playground  dist/compiler-playground
+          cp -r assets/canvas/memory-visualizer    dist/memory-visualizer
+          cp -r assets/canvas/timing-demo          dist/timing-demo
+          cp -r assets/canvas/sat-solver           dist/sat-solver
+          cp -r assets/canvas/system-map           dist/system-map
+          cp assets/portal/index.html              dist/index.html
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.15.x
+
+      # Accessibility is set to error (hard fail) since that's the
+      # category this pass specifically hardened — WCAG 2.2 target-size
+      # and focus-appearance fixes should show up as a real score, not
+      # just get claimed in a doc. Performance is a soft warn: three of
+      # these pages load full 3D engines from CDN, and a low performance
+      # score from CDN weight isn't the same class of problem as a real
+      # accessibility regression.
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Memory Safety Visualizer — NoorHack</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#0a0812;color:#e8e8f0;
+    font-family:'Share Tech Mono','Courier New',Courier,monospace;min-height:100vh;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+
+  :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+
+  #back{position:fixed;top:16px;left:20px;font-size:11px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;text-decoration:none;border:1px solid rgba(0,255,255,0.4);
+    padding:6px 12px;z-index:10;}
+  #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+  #badge{position:fixed;top:16px;right:20px;font-size:9px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;border:1px solid rgba(0,255,255,0.1);padding:4px 10px;text-align:right;}
+
+  .wrap{max-width:880px;margin:0 auto;padding:64px 24px 40px;display:flex;flex-direction:column;gap:18px;}
+  h1{font-size:20px;letter-spacing:.2em;color:#00ffff;text-align:center;text-shadow:0 0 16px rgba(0,255,255,.4);}
+  .sub{font-size:11px;letter-spacing:.15em;color:rgba(0,255,255,.55);text-align:center;}
+  .disclaimer{font-size:10px;color:rgba(255,102,0,0.85);text-align:center;letter-spacing:.05em;
+    border:1px solid rgba(255,102,0,0.25);padding:10px 16px;line-height:1.6;}
+
+  .controls{display:flex;flex-direction:column;gap:10px;align-items:center;}
+  .ctrl-row{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.1em;}
+  input[type=range]{width:280px;accent-color:#00ffff;}
+  .buf-len-val{color:#00ffff;width:30px;display:inline-block;text-align:right;}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:10px;}
+  .leg-item{display:flex;align-items:center;gap:5px;}
+  .leg-swatch{width:10px;height:10px;border-radius:2px;}
+
+  .stack-view{display:flex;flex-direction:column-reverse;gap:3px;width:100%;}
+  .frame{display:flex;align-items:center;border:1px solid rgba(255,255,255,0.08);
+    background:#0d0b16;min-height:34px;position:relative;transition:background .15s,border-color .15s;}
+  .frame-label{width:160px;flex-shrink:0;font-size:10px;color:rgba(232,232,240,0.55);
+    padding:0 10px;border-right:1px solid rgba(255,255,255,0.06);}
+  .frame-bytes{flex:1;display:flex;flex-wrap:wrap;gap:2px;padding:4px 8px;}
+  .byte{width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+    font-size:8px;border-radius:1px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);
+    transition:background .15s,color .15s,transform .15s;}
+  .byte.filled{background:rgba(0,255,255,0.18);color:#00ffff;}
+  .byte.overflow{background:rgba(255,0,60,0.3);color:#ff5577;animation:byte-pulse .6s ease-in-out infinite;}
+  @keyframes byte-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+
+  .frame.canary    { }
+  .frame.canary .frame-bytes .byte.filled{background:rgba(255,102,0,0.18);color:#ff9944;}
+  .frame.canary.tripped{border-color:#ff003c;}
+  .frame.canary.tripped .frame-label{color:#ff003c;}
+  .frame.retaddr .frame-bytes .byte.filled{background:rgba(138,43,226,0.22);color:#bb88ff;}
+  .frame.retaddr.corrupted{border-color:#ff003c;background:rgba(255,0,60,0.06);}
+  .frame.retaddr.corrupted .frame-label{color:#ff003c;}
+
+  .status{font-size:12px;text-align:center;padding:12px;border:1px solid rgba(0,255,255,0.15);
+    background:#0d0b16;min-height:60px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .status.safe{color:#00ff41;border-color:rgba(0,255,65,0.3);}
+  .status.danger{color:#ff003c;border-color:rgba(255,0,60,0.4);}
+  .status-sub{font-size:10px;color:rgba(232,232,240,0.5);letter-spacing:.05em;}
+
+  .explain{font-size:11px;line-height:1.8;color:rgba(232,232,240,0.7);
+    border-top:1px solid rgba(0,255,255,0.1);padding-top:14px;}
+  .explain b{color:#00ffff;}
+  code.inline{background:rgba(0,255,255,0.08);padding:1px 5px;color:#00ffff;}
+</style>
+</head>
+<body>
+<a id="back" href="../../../README.md">&#x2190; BACK</a>
+<div id="badge">EDUCATIONAL SIMULATION<br/>no real memory, no exploit code</div>
+
+<div class="wrap">
+  <h1>MEMORY SAFETY VISUALIZER</h1>
+  <div class="sub">// the CWE-121 stack buffer overflow, as a diagram you can drive yourself</div>
+
+  <div class="disclaimer">
+    This is a simulated stack layout built entirely from JavaScript arrays — no real process
+    memory is read, written, or executed at any point. It exists to make a textbook security
+    concept visible, the same way a CS:APP diagram does, not to demonstrate an exploit technique.
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <span>SIMULATED WRITE INTO 8-BYTE BUFFER:</span>
+      <input type="range" id="buflen" min="0" max="20" value="6" aria-label="Simulated bytes written into the 8-byte buffer"/>
+      <span class="buf-len-val" id="buflen-val">6</span> bytes
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg-item"><span class="leg-swatch" style="background:rgba(0,255,255,0.5)"></span>buffer (8 bytes, declared size)</div>
+    <div class="leg-item"><span class="leg-swatch" style="background:rgba(255,102,0,0.5)"></span>stack canary</div>
+    <div class="leg-item"><span class="leg-swatch" style="background:rgba(138,43,226,0.5)"></span>saved return address</div>
+    <div class="leg-item"><span class="leg-swatch" style="background:rgba(255,0,60,0.5)"></span>overflowed / corrupted</div>
+  </div>
+
+  <div class="stack-view" id="stack-view"></div>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="explain">
+    <p><b>What's actually happening:</b> a fixed-size local buffer (<code class="inline">char buf[8]</code>
+    in C terms) sits below the stack canary and the saved return address in this simulated frame —
+    exactly the layout a real x86-64 stack frame has with stack protection enabled. Drag the slider
+    past 8 bytes and watch the write spill upward into the canary, then into the return address.</p>
+    <p>In a real process, a corrupted canary triggers <code class="inline">__stack_chk_fail</code> and
+    aborts before the function returns. A corrupted return address — if the canary is bypassed or absent —
+    is what redirects control flow on return, which is the entire premise of classic stack-smashing.
+    Nothing here executes; it's the bookkeeping diagram, not the technique.</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const BUFFER_SIZE = 8;
+const CANARY_SIZE  = 8;
+const RETADDR_SIZE = 8;
+
+const FRAMES = [
+  { id:'buf',     label:'buf[8]  (local buffer)', size: BUFFER_SIZE,  cls:'buffer'  },
+  { id:'canary',  label:'stack canary',            size: CANARY_SIZE,  cls:'canary'  },
+  { id:'retaddr', label:'saved return address',    size: RETADDR_SIZE, cls:'retaddr' },
+];
+
+const stackView = document.getElementById('stack-view');
+const statusEl  = document.getElementById('status');
+const slider    = document.getElementById('buflen');
+const sliderVal = document.getElementById('buflen-val');
+
+function buildFrames(){
+  stackView.innerHTML = '';
+  FRAMES.forEach(f=>{
+    const frame = document.createElement('div');
+    frame.className = `frame ${f.cls}`;
+    frame.id = `frame-${f.id}`;
+    frame.innerHTML = `<div class="frame-label">${f.label}</div><div class="frame-bytes" id="bytes-${f.id}"></div>`;
+    for(let i=0;i<f.size;i++){
+      const b = document.createElement('div');
+      b.className = 'byte';
+      b.id = `byte-${f.id}-${i}`;
+      b.textContent = '00';
+      frame.querySelector('.frame-bytes').appendChild(b);
+    }
+    stackView.appendChild(frame);
+  });
+}
+
+function render(writeLen){
+  // Reset all bytes
+  FRAMES.forEach(f=>{
+    for(let i=0;i<f.size;i++){
+      const b = document.getElementById(`byte-${f.id}-${i}`);
+      b.className = 'byte';
+      b.textContent = '00';
+    }
+    document.getElementById(`frame-${f.id}`).classList.remove('tripped','corrupted');
+  });
+
+  // Simulate the write filling buf[8], then spilling upward through canary, then retaddr
+  let remaining = writeLen;
+  let canaryHit = false, retHit = false;
+
+  // Fill buffer
+  for(let i=0;i<BUFFER_SIZE && remaining>0; i++, remaining--){
+    const b = document.getElementById(`byte-buf-${i}`);
+    b.classList.add('filled');
+    b.textContent = (0x41).toString(16); // placeholder fill value, purely illustrative ('A')
+  }
+  // Spill into canary
+  for(let i=0;i<CANARY_SIZE && remaining>0; i++, remaining--){
+    const b = document.getElementById(`byte-canary-${i}`);
+    b.classList.add('filled','overflow');
+    b.textContent = (0x41).toString(16);
+    canaryHit = true;
+  }
+  // Spill into return address
+  for(let i=0;i<RETADDR_SIZE && remaining>0; i++, remaining--){
+    const b = document.getElementById(`byte-retaddr-${i}`);
+    b.classList.add('filled','overflow');
+    b.textContent = (0x41).toString(16);
+    retHit = true;
+  }
+
+  if(canaryHit) document.getElementById('frame-canary').classList.add('tripped');
+  if(retHit)    document.getElementById('frame-retaddr').classList.add('corrupted');
+
+  if(retHit){
+    statusEl.className = 'status danger';
+    statusEl.innerHTML = `OVERFLOW REACHED RETURN ADDRESS<div class="status-sub">` +
+      `In a real frame with no stack protection, the function would jump to attacker-controlled ` +
+      `data on return. With a canary present, __stack_chk_fail aborts before this point is reached.</div>`;
+  } else if(canaryHit){
+    statusEl.className = 'status danger';
+    statusEl.innerHTML = `STACK CANARY CORRUPTED<div class="status-sub">` +
+      `A real binary compiled with -fstack-protector detects this on function return and calls ` +
+      `__stack_chk_fail before the corrupted return address can ever be used.</div>`;
+  } else if(writeLen > BUFFER_SIZE){
+    statusEl.className = 'status danger';
+    statusEl.innerHTML = `BUFFER BOUNDARY EXCEEDED<div class="status-sub">` +
+      `Write exceeded the declared 8-byte buffer but hasn't reached protected regions yet — ` +
+      `still undefined behavior in C, still a real bug, just not yet control-flow-hijacking.</div>`;
+  } else {
+    statusEl.className = 'status safe';
+    statusEl.innerHTML = `WITHIN BOUNDS<div class="status-sub">` +
+      `Write fits inside the declared buffer. No undefined behavior at this stack frame.</div>`;
+  }
+}
+
+slider.addEventListener('input', ()=>{
+  sliderVal.textContent = slider.value;
+  render(+slider.value);
+});
+
+buildFrames();
+render(+slider.value);
+</script>
+</body>
+</html>

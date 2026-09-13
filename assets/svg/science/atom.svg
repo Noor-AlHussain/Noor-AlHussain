@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+      /* The orbit rings and nucleus stay visible either way (the nucleus
+         pulse is a CSS animation, already covered above). The electrons
+         and their comet trails are SMIL (animateMotion/animateTransform),
+         which that block cannot reach. Comet trails don't mean anything
+         without motion, so those are hidden outright. The electrons
+         themselves are the only visible marker on each orbit, so hiding
+         them too would leave three bare rings around a nucleus — instead
+         each orbit gets one static electron fixed at its own animateMotion
+         start point (computed from the same ellipse geometry and rotation
+         each path already uses), shown only under reduced motion. */
+      @media (prefers-reduced-motion: reduce) {
+        .reduced-motion-hide { display: none; }
+        .static-electron { display: inline; }
+      }
+      .static-electron { display: none; }
+      .bg { fill: #0a0812; }
+      .orbit { fill: none; stroke: rgba(0,255,255,0.10); stroke-width: 1; }
+      .label {
+        font-family:'Share Tech Mono','Courier New',Courier,monospace;
+        font-size: 10px;
+        fill: rgba(0,255,255,0.35);
+        letter-spacing: 0.2em;
+      }
+      /* Nucleus breathing via filter animate */
+      .nucleus-core { animation: nucleus-scale 2.4s ease-in-out infinite; transform-origin: 200px 200px; }
+      @keyframes nucleus-scale {
+        0%,100% { transform: scale(1);    }
+        50%      { transform: scale(1.18); }
+      }
+    </style>
+
+    <!-- Nucleus animated glow — stdDeviation animates -->
+    <filter id="nucleus-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="blur">
+        <animate attributeName="stdDeviation" values="6;14;6" dur="2.4s"
+                 calcMode="spline" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1" repeatCount="indefinite"/>
+      </feGaussianBlur>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Electron glow -->
+    <filter id="e-glow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Trail glow -->
+    <filter id="trail-glow" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Nucleus gradient -->
+    <radialGradient id="nuc-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.9">
+        <animate attributeName="stop-color" values="#ffffff;#00ffff;#ffffff"
+                 dur="2.4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="40%"  stop-color="#00ffff"/>
+      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.6"/>
+    </radialGradient>
+
+    <!-- Electron 1 path — orbit at 0deg tilt (ellipse rx=160 ry=52) -->
+    <ellipse id="path-e1" cx="200" cy="200" rx="160" ry="52"/>
+    <!-- Electron 2 path — rotated 60deg -->
+    <ellipse id="path-e2" cx="200" cy="200" rx="160" ry="52"
+             transform="rotate(60,200,200)"/>
+    <!-- Electron 3 path — rotated 120deg -->
+    <ellipse id="path-e3" cx="200" cy="200" rx="160" ry="52"
+             transform="rotate(120,200,200)"/>
+  </defs>
+
+  <!-- Background -->
+  <rect class="bg" width="400" height="400"/>
+
+  <!-- Subtle axis guides -->
+  <line x1="200" y1="0"   x2="200" y2="400" stroke="rgba(0,255,255,0.03)" stroke-width="1"/>
+  <line x1="0"   y1="200" x2="400" y2="200" stroke="rgba(0,255,255,0.03)" stroke-width="1"/>
+
+  <!-- Orbital path rings -->
+  <use class="orbit" href="#path-e1"/>
+  <use class="orbit" href="#path-e2"/>
+  <use class="orbit" href="#path-e3"/>
+
+  <!-- Nucleus glow halo -->
+  <circle cx="200" cy="200" r="32" fill="rgba(0,255,255,0.06)" filter="url(#nucleus-glow)"/>
+
+  <!-- Nucleus core -->
+  <circle cx="200" cy="200" r="20" fill="url(#nuc-grad)"
+          class="nucleus-core" filter="url(#nucleus-glow)"/>
+  <circle cx="200" cy="200" r="10" fill="#ffffff" opacity="0.85" class="nucleus-core"/>
+
+  <!-- ── Electron 1 — cyan, orbit-1, dur=3.2s ── -->
+  <!-- Trail arc -->
+  <use href="#path-e1" fill="none" stroke="rgba(0,255,255,0.22)" stroke-width="1.5"
+       stroke-dasharray="80 900" filter="url(#trail-glow)" class="reduced-motion-hide">
+    <animateTransform attributeName="transform" type="rotate"
+                      from="0 200 200" to="360 200 200" dur="3.2s" repeatCount="indefinite" additive="sum"/>
+  </use>
+  <!-- Electron dot using animateMotion on the ellipse path -->
+  <circle class="reduced-motion-hide" r="8" fill="#00ffff" filter="url(#e-glow)">
+    <animateMotion dur="3.2s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e1"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="360.0" cy="200.0" r="8" fill="#00ffff" filter="url(#e-glow)"/>
+  <circle class="reduced-motion-hide" r="4" fill="#ffffff" opacity="0.9">
+    <animateMotion dur="3.2s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e1"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="360.0" cy="200.0" r="4" fill="#ffffff" opacity="0.9"/>
+
+  <!-- ── Electron 2 — violet, orbit-2, dur=4.8s ── -->
+  <use href="#path-e2" fill="none" stroke="rgba(138,43,226,0.22)" stroke-width="1.5"
+       stroke-dasharray="80 900" filter="url(#trail-glow)" class="reduced-motion-hide">
+    <animateTransform attributeName="transform" type="rotate"
+                      from="0 200 200" to="-360 200 200" dur="4.8s" repeatCount="indefinite" additive="sum"/>
+  </use>
+  <circle class="reduced-motion-hide" r="8" fill="#8a2be2" filter="url(#e-glow)">
+    <animateMotion dur="4.8s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e2"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="280.0" cy="338.6" r="8" fill="#8a2be2" filter="url(#e-glow)"/>
+  <circle class="reduced-motion-hide" r="4" fill="#cc88ff" opacity="0.9">
+    <animateMotion dur="4.8s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e2"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="280.0" cy="338.6" r="4" fill="#cc88ff" opacity="0.9"/>
+
+  <!-- ── Electron 3 — green, orbit-3, dur=2.6s ── -->
+  <use href="#path-e3" fill="none" stroke="rgba(0,255,65,0.22)" stroke-width="1.5"
+       stroke-dasharray="80 900" filter="url(#trail-glow)" class="reduced-motion-hide">
+    <animateTransform attributeName="transform" type="rotate"
+                      from="0 200 200" to="360 200 200" dur="2.6s" repeatCount="indefinite" additive="sum"/>
+  </use>
+  <circle class="reduced-motion-hide" r="8" fill="#00ff41" filter="url(#e-glow)">
+    <animateMotion dur="2.6s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e3"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="120.0" cy="338.6" r="8" fill="#00ff41" filter="url(#e-glow)"/>
+  <circle class="reduced-motion-hide" r="4" fill="#aaffcc" opacity="0.9">
+    <animateMotion dur="2.6s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#path-e3"/>
+    </animateMotion>
+  </circle>
+  <circle class="static-electron" cx="120.0" cy="338.6" r="4" fill="#aaffcc" opacity="0.9"/>
+
+  <!-- Labels -->
+  <text class="label" x="16" y="22">NOORHACK</text>
+  <text class="label" x="16" y="390">// QUANTUM ATOM</text>
+</svg>

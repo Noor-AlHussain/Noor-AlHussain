@@ -1,0 +1,95 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build skills.json (fixture some tests depend on)
+        run: node scripts/build-skills-json.js
+
+      - name: Run vitest
+        run: npx vitest run --reporter=verbose
+
+  visual-regression:
+    name: Visual Regression (pixelmatch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # First run on a fresh clone (no tests/baselines/ yet) creates
+      # baselines instead of comparing — that's by design (see the script's
+      # header comment) — so this step should never fail outright on an
+      # empty baseline set. It DOES fail on genuine regressions once
+      # baselines exist and are committed.
+      - name: Run visual regression check
+        run: node tests/visual-regression.js
+
+      - name: Upload diff images on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: visual-regression-diffs
+          path: tests/diffs/
+          retention-days: 14
+
+  integrity-check:
+    name: Verify Integrity Manifest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: sha256sum -c against committed manifest
+        run: |
+          if [ ! -f assets/integrity-manifest.asc ]; then
+            echo "assets/integrity-manifest.asc is missing entirely."
+            exit 1
+          fi
+          sha256sum -c assets/integrity-manifest.asc
+
+      # Soft check: the Sigstore attestation only starts existing after the
+      # first successful run of update-readme.yml's inject-easter-eggs job
+      # on the real repo, so this can't hard-fail the whole suite before
+      # that has happened at least once. Once it has, this becomes a real
+      # cryptographic provenance check, not just a hash comparison.
+      - name: Verify Sigstore attestation (soft check)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify assets/integrity-manifest.asc \
+            --repo ${{ github.repository }} \
+            || echo "No attestation found yet — expected on repos that haven't run update-readme.yml's attestation step at least once."
