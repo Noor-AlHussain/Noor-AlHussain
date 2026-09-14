@@ -93,7 +93,7 @@ jobs:
 
       - name: Open issue if assets are missing or manifest/research is out of sync
         if: steps.check.outputs.failed == '1' || steps.manifest_check.outputs.manifest_ok == '0' || steps.research_check.outputs.research_ok == '0'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const missing = `${{ steps.check.outputs.missing }}`.trim();
