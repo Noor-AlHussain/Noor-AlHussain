@@ -32,7 +32,7 @@ jobs:
             assets/generated/snake.svg?color_snake=#00ffff&color_dots=#0a0812,#12101a,#1a1726,#8a2be2,#00ffff
 
       - name: Commit snake SVG
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           # update-snake, update-stats, and update-wakatime all run in
           # parallel with no dependency on each other, and inject-easter-eggs
@@ -77,7 +77,7 @@ jobs:
           GITHUB_USERNAME: Noor-AlHussain
 
       - name: Commit generated stats
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           pull: '--rebase --autostash'  # same race-condition fix as above
           push_attempts: 3
@@ -110,7 +110,7 @@ jobs:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
 
       - name: Commit wakatime SVG
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           pull: '--rebase --autostash'  # same race-condition fix as above
           push_attempts: 3
@@ -172,7 +172,7 @@ jobs:
         run: node scripts/generate-research.js
 
       - name: Commit updated SVGs, manifest, and research log
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           pull: '--rebase --autostash'  # same race-condition fix as above
           push_attempts: 3
@@ -208,7 +208,7 @@ jobs:
         run: node scripts/update-readme-badges.js
 
       - name: Commit README
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           pull: '--rebase --autostash'  # same race-condition fix as above
           push_attempts: 3

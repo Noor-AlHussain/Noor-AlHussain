@@ -57,7 +57,7 @@ jobs:
         continue-on-error: true   # partial failures shouldn't block other scenes' commits
 
       - name: Commit previews
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           add: "assets/previews/ assets/generated/preview-*.png"
           message: "ci: update 3D scene previews [skip ci]"
