@@ -19,7 +19,7 @@ js-sys      = "0.3"          # js_sys::Date::now() for the render-loop clock
 console_error_panic_hook = "0.1"
 log = "0.4"
 console_log = "1.0"
-glam = "0.25"          # vector/matrix math — used instead of hand-rolled Vec3/Mat4
+glam = "0.33"          # vector/matrix math — used instead of hand-rolled Vec3/Mat4
 pollster = "0.3"
 
 [dependencies.web-sys]
