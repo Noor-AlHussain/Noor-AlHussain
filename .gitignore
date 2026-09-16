@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+dist-render/
+scripts/.loc-cache.json
+
+# Visual regression debug output — only produced on a failed run, uploaded
+# as a CI artifact by tests.yml, never meant to be committed. Unlike
+# tests/baselines/, which IS meant to be tracked (it's the durable
+# comparison reference visual-regression.js checks future runs against).
+tests/diffs/
+
+# Rust / wasm-pack
+assets/canvas/rust-engine/target/
+assets/canvas/rust-engine/pkg/
+Cargo.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

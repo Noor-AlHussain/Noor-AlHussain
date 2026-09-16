@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 52" width="900" height="52">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }</style>
+  </defs>
+  <foreignObject width="900" height="52">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        .tl{width:900px;height:52px;background:#0a0812;
+            display:flex;align-items:center;justify-content:center;gap:0;
+            font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:15px;
+            letter-spacing:.18em;color:rgba(232,232,240,0.75);}
+        .prefix{color:rgba(0,255,255,0.45);margin-right:10px;flex-shrink:0;}
+        .role-wrap{position:relative;display:flex;align-items:center;min-width:360px;}
+        .role{color:#00ffff;white-space:nowrap;overflow:hidden;
+              border-right:2px solid #00ffff;
+              animation:type-cycle 18s step-end infinite;}
+        /* cursor blink */
+        @keyframes cursor-blink{0%,100%{border-color:#00ffff}50%{border-color:transparent}}
+
+        /* Typing cycle — 6 roles, 3s each */
+        @keyframes type-cycle{
+          /* Role 1: Security Researcher */
+          0%      {width:0;  content:''}
+          2%      {width:21ch}
+          15%     {width:21ch}
+          17%     {width:0}
+          /* Role 2: Software Engineer */
+          17%     {width:0}
+          19%     {width:19ch}
+          32%     {width:19ch}
+          34%     {width:0}
+          /* Role 3: Hardware Hacker */
+          34%     {width:0}
+          36%     {width:17ch}
+          49%     {width:17ch}
+          51%     {width:0}
+          /* Role 4: OS Developer */
+          51%     {width:0}
+          53%     {width:14ch}
+          66%     {width:14ch}
+          68%     {width:0}
+          /* Role 5: Compiler Writer */
+          68%     {width:0}
+          70%     {width:16ch}
+          83%     {width:16ch}
+          85%     {width:0}
+          /* Role 6: AI Researcher */
+          85%     {width:0}
+          87%     {width:14ch}
+          100%    {width:14ch}
+        }
+
+        /* Swap text content via layered spans */
+        .r1,.r2,.r3,.r4,.r5,.r6{
+          position:absolute;left:0;top:50%;transform:translateY(-50%);
+          white-space:nowrap;opacity:0;color:#00ffff;
+          overflow:hidden;border-right:2px solid #00ffff;
+          width:0;
+        }
+        .r1{animation:show-role 18s 0s   infinite step-end, type-r1 18s 0s   infinite;}
+        .r2{animation:show-role 18s 3s   infinite step-end, type-r2 18s 3s   infinite;}
+        .r3{animation:show-role 18s 6s   infinite step-end, type-r3 18s 6s   infinite;}
+        .r4{animation:show-role 18s 9s   infinite step-end, type-r4 18s 9s   infinite;}
+        .r5{animation:show-role 18s 12s  infinite step-end, type-r5 18s 12s  infinite;}
+        .r6{animation:show-role 18s 15s  infinite step-end, type-r6 18s 15s  infinite;}
+
+        @keyframes show-role{
+          0%  {opacity:1}
+          16% {opacity:1}
+          17% {opacity:0}
+          100%{opacity:0}
+        }
+        @keyframes type-r1{
+          0%  {width:0}    2%  {width:21ch}
+          14% {width:21ch} 16% {width:0}   100%{width:0}
+        }
+        @keyframes type-r2{
+          0%  {width:0}    2%  {width:19ch}
+          14% {width:19ch} 16% {width:0}   100%{width:0}
+        }
+        @keyframes type-r3{
+          0%  {width:0}    2%  {width:17ch}
+          14% {width:17ch} 16% {width:0}   100%{width:0}
+        }
+        @keyframes type-r4{
+          0%  {width:0}    2%  {width:14ch}
+          14% {width:14ch} 16% {width:0}   100%{width:0}
+        }
+        @keyframes type-r5{
+          0%  {width:0}    2%  {width:16ch}
+          14% {width:16ch} 16% {width:0}   100%{width:0}
+        }
+        @keyframes type-r6{
+          0%  {width:0}    2%  {width:14ch}
+          14% {width:14ch} 16% {width:0}   100%{width:0}
+        }
+      </style>
+      <div class="tl">
+        <span class="prefix">&gt;&#160;</span>
+        <div class="role-wrap">
+          <span class="r1">Security Researcher</span>
+          <span class="r2">Software Engineer</span>
+          <span class="r3">Hardware Hacker</span>
+          <span class="r4">OS Developer</span>
+          <span class="r5">Compiler Writer</span>
+          <span class="r6">AI Researcher</span>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>
