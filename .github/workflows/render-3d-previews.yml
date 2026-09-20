@@ -59,6 +59,12 @@ jobs:
       - name: Commit previews
         uses: EndBug/add-and-commit@v9
         with:
+          # Same fix as update-readme.yml's five commit steps: this one can
+          # race update-readme.yml's own auto-commits or a manual push
+          # landing around the same time — confirmed directly in the logs
+          # as a real non-fast-forward push rejection, not a hypothetical.
+          pull: '--rebase --autostash'
+          push_attempts: 3
           add: "assets/previews/ assets/generated/preview-*.png"
           message: "ci: update 3D scene previews [skip ci]"
           default_author: github_actions

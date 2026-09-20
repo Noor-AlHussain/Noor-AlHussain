@@ -301,6 +301,15 @@ pub fn run() {
 
         let mut state = State::new(window.clone()).await;
 
+        // Nothing else ever requests the *first* redraw — every subsequent
+        // one is chained from inside the RedrawRequested handler below, but
+        // that only starts the cycle once something has already asked for a
+        // frame. Without this, the event loop's default Wait control flow
+        // just sits idle forever: no error, no panic, no visible failure —
+        // it compiles and loads correctly and simply never draws anything,
+        // which is exactly what showed up live.
+        window.request_redraw();
+
         event_loop.run(move |event, target| {
             if let Event::WindowEvent { event, .. } = event {
                 match event {

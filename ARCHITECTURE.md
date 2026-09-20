@@ -1127,6 +1127,76 @@ WebGL2, like `wormhole`, don't need an MVP pipeline at all; the others
 use Three.js, Babylon.js, or OGL, which all get this right internally)
 — so this was a one-off, not a pattern to sweep for elsewhere.
 
+### Seventh round — rust-engine still blank after a genuinely successful build
+
+The neural-net fix confirmed live and working. `rust-engine` didn't,
+still showing an empty page — but this time from a `deploy-pages.yml`
+run that pulled a *complete* success, not the masked
+`continue-on-error` failure from two rounds back. Worth being precise
+about how that was actually confirmed rather than inferred from the
+green badge: pulled the full log for this specific run and read straight
+through the WASM build step — `Finished \`release\` profile [optimized]
+target(s) in 5.50s`, `wasm-bindgen` installed and ran, `Your wasm pkg is
+ready to publish`, artifact uploaded, `Deploy to GitHub Pages` reported
+`Reported success!` against the real
+`https://noor-alhussain.github.io/Noor-AlHussain/` environment URL. No
+step here failed, masked or otherwise. Whatever's causing the blank
+page now is a real logic problem that survives a clean compile and a
+clean load — not a build or deploy issue at all, and not the same shape
+of problem as either prior `rust-engine` round.
+
+Worked through the render pipeline the same way the neural-net matrix
+bug was found — reasoning first, then verifying numerically wherever
+that was possible — before landing on the actual cause:
+
+- **MVP math**: not hand-rolled here the way `neural-net`'s was —
+  `math.rs` uses `glam`'s own `Mat4::perspective_rh`, `Mat4::look_at_rh`,
+  and its `Mul` operator, which are the library's own correctly-laid-out
+  column-major implementations. Ruled out.
+- **Voxel sphere sizing vs. camera distance**: `build_voxel_sphere(3.2,
+  0.42)` against a camera orbiting at distance `9.0` — worked out the
+  angular size the sphere should actually subtend at that distance
+  (`2·arcsin(3.2/9.9) ≈ 38°`, comfortably inside the 45° vertical FOV),
+  not a "too small/too far to see" case. Ruled out.
+- **Face winding vs. cull mode**: the pipeline culls back faces under
+  the default counter-clockwise-is-front convention. Reconstructed all
+  six cube faces' winding from `math.rs`'s actual vertex data in Python
+  and cross-referenced each against its stated outward normal — all six
+  compute to `+1.0`, correctly front-facing from outside. A textbook
+  place for this exact bug to hide, and it wasn't there. Ruled out.
+- **The event loop itself never actually starts drawing.** `run()` sets
+  up a `winit` `EventLoop` and only ever calls `window.request_redraw()`
+  from inside the `RedrawRequested` handler — which chains each redraw
+  into the next one once the cycle is running, but never kicks it off in
+  the first place. `winit`'s own guidance is explicit that the event loop
+  sits in `ControlFlow::Wait` and does nothing on its own — the
+  application has to request the redraw itself, every time, including
+  the first — and nothing in this function did that before calling
+  `event_loop.run(...)`. That produces exactly this symptom: a clean
+  compile, a clean WASM load, a correctly-configured surface that is
+  simply never presented to, because the render loop is sitting idle
+  from the first frame onward, waiting for a request that was never
+  made. **Fixed**: added an explicit `window.request_redraw()`
+  immediately after `State::new()` completes, before `event_loop.run()`
+  is called.
+
+Flagging the confidence level honestly, the same way the earlier
+`rwh_06`/`wgsl` feature fixes were: those were confirmed by an actual
+compiler accepting or rejecting the code, a binary yes/no. This one is
+reasoned from `winit`'s documented event-loop behavior rather than
+proven the way the `neural-net` matrix bug was (that one had an
+independently-computable expected numeric answer to check against; a
+missing event isn't something to compute an expected value for the same
+way). It's the best-supported explanation after ruling out the three
+more common causes above, not a certainty — the next real deployment is
+what actually confirms it, not this paragraph.
+
+Also closed out from the previous round: `render-3d-previews.yml`'s own
+`Commit previews` step had the identical missing-`pull` gap that
+`update-readme.yml`'s five steps had before they were fixed, confirmed
+by the same non-fast-forward rejection in its logs. Added the same
+`pull: '--rebase --autostash'` / `push_attempts: 3` pair here too.
+
 ---
 
 ## WCAG 2.2 audit — all nine interactive scenes, plus the four tools
