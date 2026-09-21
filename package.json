@@ -30,7 +30,7 @@
     "@octokit/graphql": "^7.0.0",
     "svgo": "^3.0.0",
     "upng-js": "^2.1.0",
-    "yaml": "^2.3.4"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "puppeteer": "^21.0.0",
