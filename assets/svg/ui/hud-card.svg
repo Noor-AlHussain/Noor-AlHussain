@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 200" width="900" height="200">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }</style>
+  </defs>
+  <foreignObject width="900" height="200">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        .hud{width:900px;height:200px;background:#0a0812;border:1px solid rgba(0,255,255,0.15);
+             display:flex;position:relative;font-family:'Share Tech Mono','Courier New',Courier,monospace;overflow:hidden;}
+
+        /* Scan sweep — full-width bright line passes top to bottom */
+        .hud::after{content:'';position:absolute;left:0;right:0;height:2px;
+                    background:linear-gradient(90deg,transparent,rgba(0,255,255,0.25),transparent);
+                    animation:scan-sweep 4s ease-in-out infinite;pointer-events:none;z-index:10;}
+        @keyframes scan-sweep{0%{top:-2px;opacity:0}10%{opacity:1}90%{opacity:0.6}100%{top:200px;opacity:0}}
+
+        /* Scanlines */
+        .scan-overlay{position:absolute;inset:0;
+          background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);
+          pointer-events:none;}
+
+        /* HUD corner brackets */
+        .corner{position:absolute;width:16px;height:16px;border-color:rgba(138,43,226,0.7);border-style:solid;}
+        .c-tl{top:6px;left:6px;border-width:2px 0 0 2px;}
+        .c-tr{top:6px;right:6px;border-width:2px 2px 0 0;}
+        .c-bl{bottom:6px;left:6px;border-width:0 0 2px 2px;}
+        .c-br{bottom:6px;right:6px;border-width:0 2px 2px 0;}
+
+        /* Avatar zone */
+        .avatar-zone{width:155px;min-width:155px;border-right:1px solid rgba(0,255,255,0.1);
+                     display:flex;align-items:center;justify-content:center;}
+        /* Real hexagon using clip-path */
+        .avatar-hex{width:88px;height:88px;background:rgba(0,255,255,0.04);
+                    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+                    border:none;display:flex;align-items:center;justify-content:center;
+                    position:relative;animation:hex-pulse 3s ease-in-out infinite;}
+        .avatar-hex-border{position:absolute;inset:0;
+                    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+                    background:transparent;
+                    outline:2px solid rgba(0,255,255,0.4);animation:hex-pulse 3s ease-in-out infinite;}
+        .avatar-letter{font-family:Orbitron,Impact,'Arial Narrow',Arial,sans-serif;font-size:28px;font-weight:700;
+                       color:#00ffff;text-shadow:0 0 12px rgba(0,255,255,0.8);z-index:1;}
+        @keyframes hex-pulse{
+          0%,100%{box-shadow:0 0 0 rgba(0,255,255,0)}
+          50%    {box-shadow:0 0 24px rgba(0,255,255,0.15)}}
+
+        /* Data zone */
+        .data-zone{flex:1;padding:18px 26px;display:grid;grid-template-columns:1fr 1fr;
+                   gap:7px 36px;align-content:center;}
+        .field{display:flex;flex-direction:column;gap:2px;}
+        .fkey{font-size:9px;color:rgba(138,43,226,0.7);letter-spacing:.3em;}
+        .fval{font-size:13px;color:rgba(232,232,240,0.9);letter-spacing:.1em;}
+        .fval.cy{color:#00ffff;} .fval.gr{color:#00ff41;} .fval.or{color:#ff6600;}
+
+        /* Status zone */
+        .status-zone{width:175px;min-width:175px;border-left:1px solid rgba(0,255,255,0.1);
+                     padding:14px 16px;display:flex;flex-direction:column;gap:9px;justify-content:center;}
+        .sline{display:flex;align-items:center;gap:8px;font-size:10px;
+               color:rgba(232,232,240,0.45);letter-spacing:.12em;}
+        .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .on  {background:#00ff41;box-shadow:0 0 7px #00ff41;animation:dot-blink 2s ease-in-out infinite;}
+        .stby{background:#ff6600;box-shadow:0 0 7px #ff6600;}
+        .sec {background:#8a2be2;box-shadow:0 0 7px #8a2be2;}
+        .sval{margin-left:auto;color:rgba(0,255,255,0.55);font-size:9px;}
+
+        /* Footer ticker */
+        .hud-footer{position:absolute;bottom:0;left:0;right:0;height:22px;
+                    border-top:1px solid rgba(0,255,255,0.07);overflow:hidden;}
+        .ticker-track{display:flex;align-items:center;height:100%;white-space:nowrap;
+                      animation:ticker-scroll 18s linear infinite;}
+        .ticker-item{font-size:9px;color:rgba(0,255,255,0.22);letter-spacing:.2em;padding:0 28px;}
+        @keyframes ticker-scroll{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+        @keyframes dot-blink{0%,100%{opacity:1}50%{opacity:.35}}
+      </style>
+      <div class="hud">
+        <div class="scan-overlay"></div>
+        <div class="corner c-tl"></div><div class="corner c-tr"></div>
+        <div class="corner c-bl"></div><div class="corner c-br"></div>
+        <div class="avatar-zone">
+          <div style="position:relative">
+            <div class="avatar-hex"><span class="avatar-letter">N</span></div>
+            <svg style="position:absolute;inset:-2px;width:92px;height:92px" viewBox="0 0 92 92">
+              <style>
+                /* SMIL stroke pulse below is a separate animation system from
+                   the CSS animation-duration override elsewhere on this card —
+                   hidden outright under reduced motion instead. */
+                @media (prefers-reduced-motion: reduce) {
+                  .reduced-motion-hide { display: none; }
+                }
+              </style>
+              <polygon points="46,1 91,23.5 91,68.5 46,91 1,68.5 1,23.5"
+                       fill="none" stroke="rgba(0,255,255,0.45)" stroke-width="1.5" class="reduced-motion-hide">
+                <animate attributeName="stroke" values="rgba(0,255,255,0.45);rgba(0,255,255,0.9);rgba(0,255,255,0.45)"
+                         dur="3s" repeatCount="indefinite"/>
+              </polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="data-zone">
+          <div class="field"><span class="fkey">OPERATOR</span><span class="fval cy">Noor AlHussain</span></div>
+          <div class="field"><span class="fkey">HANDLE</span><span class="fval">@NoorHack</span></div>
+          <div class="field"><span class="fkey">CLASSIFICATION</span><span class="fval or">Software Engineer</span></div>
+          <div class="field"><span class="fkey">SPECIALIZATION</span><span class="fval">Security Researcher</span></div>
+          <div class="field"><span class="fkey">ORIGIN</span><span class="fval gr">Republic of Iraq</span></div>
+          <div class="field"><span class="fkey">STACK DEPTH</span><span class="fval">Silicon &#x2192; AI</span></div>
+        </div>
+        <div class="status-zone">
+          <div class="sline"><div class="sdot on"></div>IDENTITY<span class="sval">VERIFIED</span></div>
+          <div class="sline"><div class="sdot stby"></div>KERNEL<span class="sval">ARMED</span></div>
+          <div class="sline"><div class="sdot sec"></div>SECURITY<span class="sval">ACTIVE</span></div>
+          <div class="sline"><div class="sdot on"></div>AI ENGINE<span class="sval">ONLINE</span></div>
+        </div>
+        <div class="hud-footer">
+          <div class="ticker-track">
+            <span class="ticker-item">SYS:00</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">CLEARANCE: ENGINEER</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">STACK: SILICON &#x2192; AI</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">UPTIME: INDEFINITE</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">ORIGIN: REPUBLIC OF IRAQ</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">MODE: OFFENSIVE &#x26; DEFENSIVE</span>
+            <span class="ticker-item">|</span>
+            <span class="ticker-item">SYS:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

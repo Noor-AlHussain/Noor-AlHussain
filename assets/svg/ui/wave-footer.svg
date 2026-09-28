@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 70" width="900" height="70" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="wave-grad-f" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#0a0812"/>
+      <stop offset="50%"  stop-color="#0d1a2e"/>
+      <stop offset="100%" stop-color="#0a0812"/>
+    </linearGradient>
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+      .wave1f { animation: wave-drift-f 14s ease-in-out infinite; }
+      @keyframes wave-drift-f {
+        0%,100% { transform: translateX(0); }
+        50%      { transform: translateX(24px); }
+      }
+    </style>
+  </defs>
+  <rect width="900" height="70" fill="url(#wave-grad-f)"/>
+  <line x1="0" y1="0" x2="900" y2="0" stroke="rgba(0,255,255,0.15)" stroke-width="1"/>
+  <path class="wave1f" d="M0,15 C150,40 300,5 450,20 C600,35 750,10 900,18 L900,0 L0,0 Z"
+        fill="rgba(0,255,255,0.05)"/>
+</svg>

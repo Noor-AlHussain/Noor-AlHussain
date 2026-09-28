@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>DNA Helix — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    #c{width:100%;height:100%;touch-action:none;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+      font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.1em;font-size:12px;max-width:480px;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">BABYLON.JS — PBR IRIDESCENCE</div>
+  <div id="label">// DNA DOUBLE HELIX — PBR IRIDESCENCE — DRAG TO ROTATE</div>
+  <canvas id="c" role="img" aria-label="Interactive 3D DNA double helix with iridescent physically-based material, colored base pairs, and a traveling signal along the strand"></canvas>
+  <div id="fallback">
+    <p>This scene needs WebGL, which isn't available in this browser or has been disabled.<br/>
+    Try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration enabled.</p>
+  </div>
+
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+  <script>
+  'use strict';
+
+  const canvas = document.getElementById('c');
+  let engine;
+  try {
+    engine = new BABYLON.Engine(canvas, true);
+  } catch (e) {
+    document.getElementById('fallback').style.display = 'flex';
+    canvas.style.display = 'none';
+    throw new Error('WebGL unavailable for dna-3d: ' + e.message);
+  }
+  const scene  = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color4(0.039,0.031,0.071,1);
+
+  // ── Camera ──────────────────────────────────────────────────────────
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cam = new BABYLON.ArcRotateCamera('cam',
+    -Math.PI/2, Math.PI/2.5, 18, BABYLON.Vector3.Zero(), scene);
+  cam.attachControl(canvas, true);
+  cam.lowerRadiusLimit = 8;
+  cam.upperRadiusLimit = 30;
+  if (!reduceMotion) {
+    cam.useAutoRotationBehavior = true;
+    cam.autoRotationBehavior.idleRotationSpeed = 0.5;
+  }
+
+  // ── Lighting ─────────────────────────────────────────────────────────
+  const hemi = new BABYLON.HemisphericLight('h',
+    new BABYLON.Vector3(0,1,0), scene);
+  hemi.intensity = 0.15;
+
+  const pA = new BABYLON.PointLight('pA',
+    new BABYLON.Vector3(5,5,0), scene);
+  pA.diffuse    = new BABYLON.Color3(0,1,1);
+  pA.intensity  = 2.5;
+  pA.range      = 25;
+
+  const pB = new BABYLON.PointLight('pB',
+    new BABYLON.Vector3(-5,-5,0), scene);
+  pB.diffuse    = new BABYLON.Color3(0.54,0.17,0.89);
+  pB.intensity  = 1.8;
+  pB.range      = 25;
+
+  // ── Helix geometry ───────────────────────────────────────────────────
+  const TURNS  = 4;
+  const HEIGHT = 12;
+  const RADIUS = 2.2;
+  const STEPS  = TURNS * 60;
+
+  function helixPath(phaseOff){
+    const pts=[];
+    for(let i=0;i<=STEPS;i++){
+      const t=i/STEPS;
+      const ang=t*TURNS*Math.PI*2+phaseOff;
+      pts.push(new BABYLON.Vector3(
+        Math.cos(ang)*RADIUS, (t-0.5)*HEIGHT, Math.sin(ang)*RADIUS));
+    }
+    return pts;
+  }
+
+  // PBR tube material factory
+  function tubeMat(name, albedo, emissive){
+    const m = new BABYLON.PBRMaterial(name, scene);
+    m.albedoColor   = albedo;
+    m.emissiveColor = emissive;
+    m.metallic      = 0.1;
+    m.roughness     = 0.2;
+    // Iridescence — thin-film interference
+    m.iridescence.isEnabled      = true;
+    m.iridescence.intensity      = 0.8;
+    m.iridescence.minimumThickness= 100;
+    m.iridescence.maximumThickness= 400;
+    return m;
+  }
+
+  // Create tube along path
+  function makeTube(path, matFn, name){
+    const tube = BABYLON.MeshBuilder.CreateTube(name, {
+      path, radius:0.1, tessellation:10,
+      updatable:false, sideOrientation:BABYLON.Mesh.DOUBLESIDE
+    }, scene);
+    tube.material = matFn;
+    return tube;
+  }
+
+  const matA = tubeMat('matA',
+    new BABYLON.Color3(0,0.8,0.9),
+    new BABYLON.Color3(0,0.3,0.4));
+  const matB = tubeMat('matB',
+    new BABYLON.Color3(0.5,0.15,0.8),
+    new BABYLON.Color3(0.2,0.05,0.35));
+
+  const tubeA = makeTube(helixPath(0),       matA, 'tubeA');
+  const tubeB = makeTube(helixPath(Math.PI), matB, 'tubeB');
+
+  // ── Base pairs ───────────────────────────────────────────────────────
+  const PAIR_COLS = [
+    new BABYLON.Color3(0,1,0.25),
+    new BABYLON.Color3(1,0.4,0),
+    new BABYLON.Color3(0,1,1),
+    new BABYLON.Color3(1,0,0.24),
+  ];
+
+  const PAIRS = TURNS*10;
+  const pairMeshes = [];
+
+  for(let i=0;i<PAIRS;i++){
+    const t    = i/PAIRS;
+    const ang  = t*TURNS*Math.PI*2;
+    const y    = (t-0.5)*HEIGHT;
+    const ax   = Math.cos(ang)*RADIUS;
+    const az   = Math.sin(ang)*RADIUS;
+    const bx   = Math.cos(ang+Math.PI)*RADIUS;
+    const bz   = Math.sin(ang+Math.PI)*RADIUS;
+    const col  = PAIR_COLS[i%4];
+
+    // Rod
+    const mid  = new BABYLON.Vector3((ax+bx)/2, y, (az+bz)/2);
+    const len  = Math.sqrt((bx-ax)**2+(bz-az)**2);
+    const rod  = BABYLON.MeshBuilder.CreateCylinder(`rod${i}`,
+      {diameter:0.05, height:len, tessellation:6}, scene);
+    const rm   = new BABYLON.PBRMaterial(`rodM${i}`, scene);
+    rm.albedoColor   = col;
+    rm.emissiveColor = col.scale(0.5);
+    rm.metallic      = 0.2;
+    rm.roughness     = 0.3;
+    rod.material = rm;
+    rod.position = mid;
+    rod.rotation.z = Math.PI/2;
+    rod.rotation.y = Math.atan2(bz-az, bx-ax);
+
+    // End spheres
+    [[ax,y,az],[bx,y,bz]].forEach((p,j)=>{
+      const sp = BABYLON.MeshBuilder.CreateSphere(`sp${i}_${j}`,
+        {diameter:0.18, segments:8}, scene);
+      const sm = new BABYLON.PBRMaterial(`spM${i}_${j}`, scene);
+      sm.albedoColor   = col;
+      sm.emissiveColor = col.scale(0.6);
+      sm.metallic      = 0.0;
+      sm.roughness     = 0.1;
+      sp.material = sm;
+      sp.position = new BABYLON.Vector3(...p);
+      pairMeshes.push(sp);
+    });
+    pairMeshes.push(rod);
+  }
+
+  // ── Traveling signal along strand A ──────────────────────────────────
+  const sigMesh = BABYLON.MeshBuilder.CreateSphere('sig',
+    {diameter:0.22, segments:8}, scene);
+  const sigMat  = new BABYLON.PBRMaterial('sigMat', scene);
+  sigMat.albedoColor   = new BABYLON.Color3(1,1,1);
+  sigMat.emissiveColor = new BABYLON.Color3(0.8,1,1);
+  sigMat.metallic  = 0; sigMat.roughness = 0.05;
+  sigMesh.material = sigMat;
+
+  const pathA = helixPath(0);
+  let sigT = 0;
+
+  // ── Glow layer ───────────────────────────────────────────────────────
+  const gl = new BABYLON.GlowLayer('glow', scene);
+  gl.intensity = 0.6;
+  [tubeA,tubeB,sigMesh,...pairMeshes].forEach(m=>gl.addIncludedOnlyMesh(m));
+
+  // ── Post-processing ──────────────────────────────────────────────────
+  const pipe = new BABYLON.DefaultRenderingPipeline('pipe', true, scene, [cam]);
+  pipe.bloomEnabled    = true;
+  pipe.bloomThreshold  = 0.25;
+  pipe.bloomWeight     = 0.5;
+  pipe.bloomKernel     = 48;
+  pipe.imageProcessingEnabled = true;
+  pipe.imageProcessing.toneMappingEnabled = true;
+  pipe.imageProcessing.toneMappingType =
+    BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+  pipe.imageProcessing.exposure = 1.05;
+
+  // ── Stars ─────────────────────────────────────────────────────────────
+  const starPS = new BABYLON.ParticleSystem('stars',1500,scene);
+  starPS.particleTexture = new BABYLON.Texture(
+    'https://assets.babylonjs.com/textures/flare.png',scene);
+  starPS.emitter     = BABYLON.Vector3.Zero();
+  starPS.minEmitBox  = new BABYLON.Vector3(-80,-80,-80);
+  starPS.maxEmitBox  = new BABYLON.Vector3(80,80,80);
+  starPS.color1      = new BABYLON.Color4(1,1,1,0.35);
+  starPS.color2      = new BABYLON.Color4(0.7,0.85,1,0.15);
+  starPS.minSize     = 0.04; starPS.maxSize    = 0.1;
+  starPS.minLifeTime = 9999; starPS.maxLifeTime= 9999;
+  starPS.emitRate    = 0;
+  starPS.manualEmitCount = 1500;
+  starPS.minEmitPower=0; starPS.maxEmitPower=0;
+  starPS.blendMode   = BABYLON.ParticleSystem.BLENDMODE_ADD;
+  starPS.start();
+
+  // ── Render loop ───────────────────────────────────────────────────────
+  let t=0;
+  scene.onBeforeRenderObservable.add(()=>{
+    const dt = reduceMotion ? 0 : engine.getDeltaTime()*0.001;
+    t += dt;
+
+    // Animate point lights
+    pA.intensity = 2.2+0.6*Math.sin(t*1.4);
+    pB.intensity = 1.6+0.5*Math.cos(t*1.8);
+
+    // Pulse base pairs
+    pairMeshes.forEach((m,i)=>{
+      if(m.material && m.material.emissiveColor){
+        const pulse = 0.4+0.2*Math.sin(t*2+i*0.3);
+        m.material.emissiveIntensity = pulse;
+      }
+    });
+
+    // Signal travels along strand
+    sigT = (sigT+dt*0.15)%1;
+    const idx = Math.floor(sigT*pathA.length);
+    if(pathA[idx]) sigMesh.position.copyFrom(pathA[idx]);
+  });
+
+  engine.runRenderLoop(()=>scene.render());
+  window.addEventListener('resize',()=>engine.resize());
+  </script>
+</body>
+</html>

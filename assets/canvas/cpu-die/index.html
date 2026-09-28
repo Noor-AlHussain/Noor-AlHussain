@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CPU Die — NoorHack</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#0a0812;overflow:hidden;}
+    canvas{display:block;}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+    :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+    #label{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+           font-family:'Share Tech Mono',monospace;font-size:11px;
+           color:rgba(0,255,255,0.55);letter-spacing:.3em;pointer-events:none;}
+    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono',monospace;
+          font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+          text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
+    #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+    #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono',monospace;
+      font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
+      border:1px solid rgba(0,255,255,0.1);padding:4px 10px;}
+    #fallback{display:none;position:fixed;inset:0;background:#0a0812;z-index:5;
+      align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
+      font-family:'Share Tech Mono',monospace;padding:0 20px;}
+    #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.1em;font-size:12px;max-width:480px;line-height:1.6;}
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <a id="back" href="../../../README.md">&#x2190; BACK</a>
+  <div id="badge">THREE.JS — SHARED SHADERMATERIAL</div>
+  <div id="label">// CPU DIE — EXPLODED SILICON LAYER VIEW</div>
+  <div id="fallback">
+    <p>This scene needs WebGL, which isn't available in this browser or has been disabled.<br/>
+    Try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration enabled.</p>
+  </div>
+
+  <script type="importmap">
+  {"imports":{"three":"https://unpkg.com/three@0.158.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.158.0/examples/jsm/"}}
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    const scene    = new THREE.Scene();
+    const camera   = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.set(6, 8, 14);
+    camera.lookAt(0, 0, 0);
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    } catch (e) {
+      document.getElementById('fallback').style.display = 'flex';
+      throw new Error('WebGL unavailable for cpu-die: ' + e.message);
+    }
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-label',
+      'Interactive exploded-view diagram of a CPU die — eight stacked silicon layers with circuit trace patterns that periodically separate and reassemble, rendered with Three.js');
+    document.body.appendChild(renderer.domElement);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), 1.0, 0.4, 0.85);
+    composer.addPass(bloom);
+
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping=true; controls.dampingFactor=0.05;
+    controls.autoRotate=!reduceMotion; controls.autoRotateSpeed=0.5;
+    if (!reduceMotion) {
+      controls.addEventListener('end', () => { controls.autoRotate=true; });
+    }
+
+    // ── Shared layer ShaderMaterial ─────────────────────────────────
+    // Single material with uLayerIndex uniform — avoids N separate materials
+    const sharedMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime:       { value: 0 },
+        uExplode:    { value: 0 },
+        uLayerIndex: { value: 0 },   // per draw call via onBeforeRender
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uExplode;
+        uniform float uLayerIndex;
+        varying vec3 vNormal;
+        varying vec3 vPos;
+        void main(){
+          vNormal = normalize(normalMatrix*normal);
+          vPos    = position;
+          gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uExplode;
+        uniform float uLayerIndex;
+        varying vec3 vNormal;
+        varying vec3 vPos;
+
+        vec3 layerColor(float idx){
+          if(idx<0.5) return vec3(0.102,0.102,0.180);
+          if(idx<1.5) return vec3(0.086,0.125,0.196);
+          if(idx<2.5) return vec3(0.0,  0.2,  0.227);
+          if(idx<3.5) return vec3(0.0,  0.239,0.267);
+          if(idx<4.5) return vec3(0.0,  0.282,0.314);
+          if(idx<5.5) return vec3(0.0,  0.133,0.267);
+          if(idx<6.5) return vec3(0.0,  0.067,0.200);
+          return            vec3(0.122,0.122,0.122);
+        }
+        vec3 emitColor(float idx){
+          if(idx<0.5) return vec3(0.016,0.267,0.467);
+          if(idx<1.5) return vec3(0.0,  1.0,  1.0);
+          if(idx<2.5) return vec3(0.0,  0.667,1.0);
+          if(idx<3.5) return vec3(0.0,  0.8,  1.0);
+          if(idx<4.5) return vec3(0.0,  0.933,1.0);
+          if(idx<5.5) return vec3(0.54, 0.17, 0.89);
+          if(idx<6.5) return vec3(1.0,  0.0,  0.235);
+          return            vec3(0.667,0.667,0.667);
+        }
+
+        void main(){
+          vec3 base  = layerColor(uLayerIndex);
+          vec3 emit  = emitColor(uLayerIndex);
+          float topFace = max(dot(vNormal,vec3(0,1,0)),0.0);
+
+          // Circuit trace grid on top face
+          float trX = step(0.90, fract(vPos.x*2.2));
+          float trZ = step(0.90, fract(vPos.z*2.2));
+          float trace = max(trX,trZ)*topFace;
+
+          vec3 col = base + trace*emit*0.45;
+
+          // Edge rim glow — stronger when exploded
+          float rim = 1.0-abs(dot(vNormal,vec3(0,1,0)));
+          col += emit*rim*0.35*uExplode;
+
+          // Subtle top pulse
+          col += emit*topFace*0.04*uExplode*(0.7+0.3*sin(uTime*1.8+uLayerIndex));
+
+          gl_FragColor = vec4(col,1.0);
+        }
+      `,
+    });
+
+    // ── Layer definitions ─────────────────────────────────────────────
+    const CPU_LAYERS = [
+      { w:8.0, d:8.0, h:0.15, yBase:0.00 },
+      { w:7.6, d:7.6, h:0.12, yBase:0.15 },
+      { w:7.2, d:7.2, h:0.10, yBase:0.27 },
+      { w:7.2, d:7.2, h:0.10, yBase:0.37 },
+      { w:7.2, d:7.2, h:0.10, yBase:0.47 },
+      { w:6.8, d:6.8, h:0.18, yBase:0.57 },
+      { w:4.0, d:4.0, h:0.20, yBase:0.75 },
+      { w:8.4, d:8.4, h:0.20, yBase:0.95 },
+    ];
+
+    const EXPLODE_SEP = 0.95;
+    const EMIT_HEX = ['#004477','#00ffff','#00aaff','#00ccff','#00eeff','#8a2be2','#ff003c','#aaaaaa'];
+    const layerMeshes = [];
+
+    CPU_LAYERS.forEach((l, i) => {
+      const geo  = new THREE.BoxGeometry(l.w, l.h, l.d);
+      const mat  = sharedMat.clone();   // clone to get independent uLayerIndex
+      mat.uniforms.uLayerIndex.value = i;
+
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.y = l.yBase + l.h/2;
+      scene.add(mesh);
+
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: EMIT_HEX[i], transparent:true, opacity:0.3
+      });
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
+      edges.position.copy(mesh.position);
+      scene.add(edges);
+
+      layerMeshes.push({ mesh, edges, mat, edgeMat,
+        yBase: l.yBase + l.h/2,
+        yExploded: l.yBase + l.h/2 + i * EXPLODE_SEP });
+    });
+
+    // ── Grid — fades when exploded ─────────────────────────────────────
+    const gridHelper = new THREE.GridHelper(22, 22, 0x00ffff, 0x00ffff);
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity     = 0.06;
+    scene.add(gridHelper);
+
+    // ── Stars ──────────────────────────────────────────────────────────
+    const sPos = new Float32Array(1500*3);
+    for(let i=0;i<sPos.length;i++) sPos[i]=(Math.random()-0.5)*300;
+    const sGeo = new THREE.BufferGeometry();
+    sGeo.setAttribute('position', new THREE.BufferAttribute(sPos,3));
+    scene.add(new THREE.Points(sGeo,
+      new THREE.PointsMaterial({color:0xffffff,size:0.06,transparent:true,opacity:0.18})
+    ));
+
+    // ── Animate ────────────────────────────────────────────────────────
+    const clock = new THREE.Clock();
+    const CYCLE = 7.0;
+
+    // Smootherstep — pause at assembled and exploded states
+    function smootherStep(x) {
+      x = Math.max(0, Math.min(1, x));
+      return x*x*x*(x*(x*6-15)+10);
+    }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      const t = reduceMotion ? 0 : clock.getElapsedTime();
+
+      // 0→1→0 over CYCLE, with smootherStep easing for natural pause
+      const raw     = 0.5 + 0.5*Math.sin(t*(Math.PI/CYCLE) - Math.PI/2);
+      const explode = smootherStep(raw);
+
+      layerMeshes.forEach(m => {
+        const y = m.yBase + (m.yExploded - m.yBase)*explode;
+        m.mesh.position.y  = y;
+        m.edges.position.y = y;
+        m.mat.uniforms.uTime.value    = t;
+        m.mat.uniforms.uExplode.value = explode;
+
+        // Edge opacity increases when exploded
+        m.edgeMat.opacity = 0.18 + explode*0.45;
+      });
+
+      // Grid fades as layers spread
+      gridHelper.material.opacity = 0.06 - explode*0.04;
+
+      controls.update();
+      composer.render();
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      composer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

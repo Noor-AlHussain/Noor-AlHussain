@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Timing Side-Channel Demo — NoorHack</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#0a0812;color:#e8e8f0;
+    font-family:'Share Tech Mono','Courier New',Courier,monospace;min-height:100vh;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;} }
+
+  :focus-visible{outline:2px solid #00ffff;outline-offset:2px;}
+
+  #back{position:fixed;top:16px;left:20px;font-size:11px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;text-decoration:none;border:1px solid rgba(0,255,255,0.4);
+    padding:6px 12px;z-index:10;}
+  #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
+  #badge{position:fixed;top:16px;right:20px;font-size:9px;color:rgba(0,255,255,0.55);
+    letter-spacing:.2em;border:1px solid rgba(0,255,255,0.1);padding:4px 10px;text-align:right;}
+
+  .wrap{max-width:920px;margin:0 auto;padding:64px 24px 40px;display:flex;flex-direction:column;gap:18px;}
+  h1{font-size:20px;letter-spacing:.2em;color:#00ffff;text-align:center;text-shadow:0 0 16px rgba(0,255,255,.4);}
+  .sub{font-size:11px;letter-spacing:.15em;color:rgba(0,255,255,.55);text-align:center;}
+
+  .panel{border:1px solid rgba(0,255,255,0.15);background:#0d0b16;padding:16px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;}
+  label{font-size:10px;letter-spacing:.15em;color:rgba(187,136,255,0.8);}
+  input[type=text]{background:#0a0812;border:1px solid rgba(0,255,255,0.4);color:#00ffff;
+    font-family:inherit;font-size:13px;padding:8px 10px;width:220px;outline:none;}
+  input[type=text]:focus{border-color:rgba(0,255,255,0.6);}
+  .run-btn{font-size:12px;letter-spacing:.15em;color:#0a0812;background:#00ffff;border:none;
+    padding:10px 20px;cursor:pointer;font-family:inherit;font-weight:700;}
+  .run-btn:hover{box-shadow:0 0 18px rgba(0,255,255,0.5);}
+  .run-btn:disabled{opacity:.4;cursor:default;}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.charts{grid-template-columns:1fr;}}
+  .chart-title{font-size:10px;letter-spacing:.15em;color:#00ffff;margin-bottom:10px;}
+  .bars{display:flex;flex-direction:column;gap:5px;}
+  .bar-row{display:flex;align-items:center;gap:8px;font-size:9px;}
+  .bar-label{width:90px;flex-shrink:0;color:rgba(232,232,240,0.5);text-align:right;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{flex:1;height:14px;background:rgba(255,255,255,0.04);position:relative;}
+  .bar-fill{height:100%;transition:width .25s ease;}
+  .bar-fill.naive{background:linear-gradient(90deg,#ff6600,#ff003c);}
+  .bar-fill.const{background:linear-gradient(90deg,#00ff41,#00ffff);}
+  .bar-val{width:64px;font-size:9px;color:rgba(232,232,240,0.6);}
+
+  .verdict{font-size:11px;text-align:center;padding:12px;border:1px solid rgba(0,255,255,0.15);
+    line-height:1.7;}
+  .verdict b{color:#00ffff;}
+
+  .explain{font-size:11px;line-height:1.8;color:rgba(232,232,240,0.7);
+    border-top:1px solid rgba(0,255,255,0.1);padding-top:14px;}
+  code.inline{background:rgba(0,255,255,0.08);padding:1px 5px;color:#00ffff;}
+  .small{font-size:9px;color:rgba(232,232,240,0.55);text-align:center;}
+</style>
+</head>
+<body>
+<a id="back" href="../../../README.md">&#x2190; BACK</a>
+<div id="badge">REAL BENCHMARK<br/>performance.now() in your own browser</div>
+
+<div class="wrap">
+  <h1>TIMING SIDE-CHANNEL DEMO</h1>
+  <div class="sub">// why string comparison for secrets needs to run in constant time</div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <label>SECRET (server-side, fixed)</label><br/>
+        <input type="text" id="secret" value="s3cr3t-t0k3n" aria-label="Server-side secret value, shown for demonstration only" disabled/>
+      </div>
+      <div>
+        <label>YOUR GUESS</label><br/>
+        <input type="text" id="guess" value="aaaaaaaaaaaa" maxlength="32" aria-label="Your guess to compare against the secret token"/>
+      </div>
+      <button class="run-btn" id="run">RUN 20,000 COMPARISONS</button>
+    </div>
+    <div class="small" id="run-status" style="margin-top:8px;">Try a guess that shares a long correct prefix with the secret, then one that's wrong from the first character.</div>
+  </div>
+
+  <div class="charts">
+    <div class="panel">
+      <div class="chart-title">NAIVE COMPARE (early-exit on first mismatch)</div>
+      <div class="bars" id="bars-naive"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">CONSTANT-TIME COMPARE (always scans full length)</div>
+      <div class="bars" id="bars-const"></div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict" aria-live="polite">Run the benchmark to see measured timing per guess.</div>
+
+  <div class="explain">
+    <p><b>What this measures:</b> for each guess, this page actually times <code class="inline">20,000</code>
+    repeated comparisons against the real secret string, in your browser, right now — these aren't
+    fabricated numbers. The naive comparison returns as soon as it finds a mismatched character, so
+    a guess that's correct for longer takes measurably more time. The constant-time version always
+    walks the full length and XORs every byte before checking the accumulated result once at the end,
+    so its timing stays flat regardless of where the mismatch is.</p>
+    <p>This is the entire reason libraries expose functions like <code class="inline">crypto.timingSafeEqual</code>
+    (Node.js) or <code class="inline">hmac.compare_digest</code> (Python) instead of letting you write
+    <code class="inline">a === b</code> on secrets: an attacker who can measure response time over enough
+    requests can recover a token or password one character at a time, never needing to guess the whole
+    thing at once.</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── The two comparisons under test ──────────────────────────────────
+function naiveCompare(a, b){
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++){
+    if (a[i] !== b[i]) return false;   // early exit — this is the leak
+  }
+  return true;
+}
+function constantTimeCompare(a, b){
+  // Always walks the full (max) length and accumulates a difference signal
+  // via XOR rather than branching — no early return on mismatch.
+  const len = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < len; i++){
+    const ca = i < a.length ? a.charCodeAt(i) : 0;
+    const cb = i < b.length ? b.charCodeAt(i) : 0;
+    diff |= ca ^ cb;
+  }
+  return diff === 0;
+}
+
+const ITERATIONS = 20000;
+
+function timeFn(fn, a, b, iterations){
+  // Warm up the JIT so the measurement reflects steady-state performance,
+  // not compilation overhead.
+  for (let i=0;i<200;i++) fn(a,b);
+
+  const t0 = performance.now();
+  for (let i=0;i<iterations;i++) fn(a,b);
+  const t1 = performance.now();
+  return (t1 - t0) / iterations * 1000; // microseconds per call
+}
+
+function buildBarRow(label, value, maxValue, cls){
+  const pct = maxValue > 0 ? Math.min(100, (value/maxValue)*100) : 0;
+  return `<div class="bar-row">
+    <div class="bar-label">${label}</div>
+    <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+    <div class="bar-val">${value.toFixed(3)}&micro;s</div>
+  </div>`;
+}
+
+function run(){
+  const secret = document.getElementById('secret').value;
+  const guess  = document.getElementById('guess').value || '';
+  const runBtn = document.getElementById('run');
+  const statusEl = document.getElementById('run-status');
+
+  runBtn.disabled = true;
+  statusEl.textContent = 'Running ' + ITERATIONS.toLocaleString() + ' iterations per guess variant...';
+
+  // Build a small family of guesses with increasing correct-prefix length,
+  // so the timing trend (or flatness) is visible as a small bar chart
+  // rather than a single number.
+  const variants = [];
+  variants.push({ label:'all wrong',        guess: 'x'.repeat(secret.length) });
+  for (const frac of [0.25, 0.5, 0.75]){
+    const cut = Math.floor(secret.length * frac);
+    variants.push({ label:`${Math.round(frac*100)}% correct prefix`, guess: secret.slice(0,cut) + 'x'.repeat(secret.length-cut) });
+  }
+  variants.push({ label:'your guess', guess });
+  variants.push({ label:'exact match', guess: secret });
+
+  // Defer actual measurement slightly so the "running..." status paints first
+  setTimeout(() => {
+    const naiveResults = variants.map(v => ({ label:v.label, us: timeFn(naiveCompare, secret, v.guess, ITERATIONS) }));
+    const constResults = variants.map(v => ({ label:v.label, us: timeFn(constantTimeCompare, secret, v.guess, ITERATIONS) }));
+
+    const maxNaive = Math.max(...naiveResults.map(r=>r.us));
+    const maxConst = Math.max(...constResults.map(r=>r.us));
+    const sharedMax = Math.max(maxNaive, maxConst);
+
+    document.getElementById('bars-naive').innerHTML =
+      naiveResults.map(r => buildBarRow(r.label, r.us, sharedMax, 'naive')).join('');
+    document.getElementById('bars-const').innerHTML =
+      constResults.map(r => buildBarRow(r.label, r.us, sharedMax, 'const')).join('');
+
+    const naiveSpread = maxNaive - Math.min(...naiveResults.map(r=>r.us));
+    const constSpread = maxConst - Math.min(...constResults.map(r=>r.us));
+    const ratio = constSpread > 0 ? (naiveSpread/constSpread) : naiveSpread;
+
+    document.getElementById('verdict').innerHTML =
+      `Naive comparison's timing spread across guesses: <b>${naiveSpread.toFixed(3)}&micro;s</b>. ` +
+      `Constant-time spread: <b>${constSpread.toFixed(3)}&micro;s</b>. ` +
+      `On a single browser run this gap can be noisy — real timing attacks average millions of ` +
+      `requests to separate this signal from network and scheduler jitter, which is exactly why ` +
+      `they're practical against network services and why constant-time comparison matters for them.`;
+
+    statusEl.textContent = 'Done. Try a guess that matches a long prefix of the secret, then re-run.';
+    runBtn.disabled = false;
+  }, 50);
+}
+
+document.getElementById('run').addEventListener('click', run);
+run();
+</script>
+</body>
+</html>

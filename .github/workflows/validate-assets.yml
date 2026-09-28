@@ -1,0 +1,139 @@
+name: Validate Generated Assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/generated/**"
+      - "assets/integrity-manifest.asc"
+      - "data/research-log.yaml"
+  workflow_run:
+    workflows: ["Update README — Master Pipeline"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues:   write
+
+jobs:
+  validate:
+    name: Validate SVG Assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Check all required assets exist and are non-empty
+        id: check
+        run: |
+          FAILED=0
+          MISSING=""
+          REQUIRED=(
+            "assets/generated/stats.svg"
+            "assets/generated/streak.svg"
+            "assets/generated/langs.svg"
+            "assets/generated/wakatime.svg"
+            "assets/generated/snake.svg"
+            "assets/generated/contribution-graph.svg"
+            "assets/generated/dashboard.svg"
+            "assets/integrity-manifest.asc"
+          )
+          for f in "${REQUIRED[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              MISSING="$MISSING $f"
+              FAILED=1
+            elif [ ! -s "$f" ]; then
+              echo "EMPTY: $f"
+              MISSING="$MISSING $f (empty)"
+              FAILED=1
+            elif [ $(wc -c < "$f") -lt 200 ]; then
+              echo "TOO_SMALL: $f ($(wc -c < "$f") bytes)"
+              MISSING="$MISSING $f (too small)"
+              FAILED=1
+            else
+              echo "OK: $f ($(wc -c < "$f") bytes)"
+            fi
+          done
+          echo "failed=$FAILED"     >> $GITHUB_OUTPUT
+          echo "missing=$MISSING"   >> $GITHUB_OUTPUT
+
+      # The manifest existing isn't enough — it has to actually verify.
+      # A manifest that fails its own check is worse than no manifest.
+      - name: Cryptographically verify the integrity manifest
+        id: manifest_check
+        run: |
+          if [ -f assets/integrity-manifest.asc ]; then
+            if sha256sum -c assets/integrity-manifest.asc; then
+              echo "manifest_ok=1" >> $GITHUB_OUTPUT
+            else
+              echo "manifest_ok=0" >> $GITHUB_OUTPUT
+              echo "::error::integrity-manifest.asc exists but does NOT verify against the committed files"
+            fi
+          else
+            echo "manifest_ok=0" >> $GITHUB_OUTPUT
+          fi
+
+      # research-log.yaml should never silently drift from what's rendered
+      # in README.md — if someone edits the YAML and forgets to regenerate,
+      # this catches it instead of shipping stale content.
+      - name: Check research log is in sync with README
+        id: research_check
+        run: |
+          node scripts/generate-research.js
+          if git diff --quiet README.md; then
+            echo "research_ok=1" >> $GITHUB_OUTPUT
+          else
+            echo "research_ok=0" >> $GITHUB_OUTPUT
+            echo "::error::README.md's RESEARCH LOG section is out of sync with data/research-log.yaml — run 'node scripts/generate-research.js' and commit the result"
+            git diff README.md
+          fi
+        continue-on-error: true
+
+      - name: Open issue if assets are missing or manifest/research is out of sync
+        if: steps.check.outputs.failed == '1' || steps.manifest_check.outputs.manifest_ok == '0' || steps.research_check.outputs.research_ok == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const missing = `${{ steps.check.outputs.missing }}`.trim();
+            const manifestOk = `${{ steps.manifest_check.outputs.manifest_ok }}` === '1';
+            const researchOk = `${{ steps.research_check.outputs.research_ok }}` === '1';
+
+            const problems = [];
+            if (missing) {
+              problems.push('**Missing or invalid generated assets:**');
+              problems.push(...missing.split(' ').filter(Boolean).map(f => `- \`${f}\``));
+            }
+            if (!manifestOk) {
+              problems.push('', '**Integrity manifest does not verify** — `assets/integrity-manifest.asc` is out of date or corrupted.');
+            }
+            if (!researchOk) {
+              problems.push('', '**Research log out of sync** — `README.md` does not match `data/research-log.yaml`. Run `node scripts/generate-research.js`.');
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: '[CI] Asset/integrity/research-log validation failed',
+              body: [
+                '## Validation Failed',
+                '',
+                ...problems,
+                '',
+                '**Action required:** Run the `Update README` workflow manually, or fix locally and push.',
+                '',
+                `*Triggered by commit: ${context.sha}*`,
+              ].join('\n'),
+              labels: ['ci', 'bug'],
+            });
+
+      - name: Validate SVG structure
+        run: |
+          for f in assets/generated/*.svg; do
+            if ! grep -q '<svg' "$f"; then
+              echo "INVALID SVG: $f"
+              exit 1
+            fi
+            echo "VALID SVG: $f"
+          done

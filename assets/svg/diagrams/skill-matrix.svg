@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" width="900" height="480">
+  <defs>
+    <style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }</style>
+  </defs>
+  <foreignObject width="900" height="480">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        .mx{width:900px;height:480px;background:#0a0812;
+            font-family:'Share Tech Mono','Courier New',monospace;
+            padding:18px 20px;display:grid;
+            grid-template-columns:1fr 1fr 1fr;gap:14px 20px;}
+
+        .domain{display:flex;flex-direction:column;gap:6px;}
+
+        .domain-header{
+          font-size:10px;letter-spacing:.32em;padding:5px 0 5px 10px;
+          border-left:2px solid currentColor;margin-bottom:4px;font-weight:700;
+          animation:hdr-pulse 4s ease-in-out infinite;
+        }
+        @keyframes hdr-pulse{0%,100%{opacity:.7}50%{opacity:1}}
+
+        .skill-row{display:flex;align-items:center;gap:8px;margin:1px 0;}
+
+        .skill-name{
+          font-size:10px;color:rgba(232,232,240,0.65);
+          letter-spacing:.1em;width:86px;flex-shrink:0;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        }
+
+        /* Bar track */
+        .bar-track{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;position:relative;}
+        .bar-fill{
+          height:100%;border-radius:3px;
+          animation:bar-draw .9s cubic-bezier(0.4,0,0.2,1) forwards;
+          width:0;
+        }
+        @keyframes bar-draw{to{width:var(--w)}}
+
+        /* Experience dots */
+        .dots{display:flex;gap:3px;flex-shrink:0;}
+        .dot{
+          width:6px;height:6px;border-radius:50%;
+          border:1px solid rgba(255,255,255,0.2);
+        }
+        .dot.filled{border:none;}
+
+        /* Domain colors */
+        .kernel   .domain-header{color:#00ffff;}
+        .security .domain-header{color:#ff003c;}
+        .ai       .domain-header{color:#ff6600;}
+        .web      .domain-header{color:#8a2be2;}
+        .hardware .domain-header{color:#00ff41;}
+        .lang     .domain-header{color:#ffffff;}
+
+        .kernel   .bar-fill{background:linear-gradient(90deg,#004466,#00ffff);}
+        .security .bar-fill{background:linear-gradient(90deg,#440011,#ff003c);}
+        .ai       .bar-fill{background:linear-gradient(90deg,#442200,#ff6600);}
+        .web      .bar-fill{background:linear-gradient(90deg,#220044,#8a2be2);}
+        .hardware .bar-fill{background:linear-gradient(90deg,#004400,#00ff41);}
+        .lang     .bar-fill{background:linear-gradient(90deg,#333333,#ffffff);}
+
+        .kernel   .dot.filled{background:#00ffff;box-shadow:0 0 4px #00ffff;}
+        .security .dot.filled{background:#ff003c;box-shadow:0 0 4px #ff003c;}
+        .ai       .dot.filled{background:#ff6600;box-shadow:0 0 4px #ff6600;}
+        .web      .dot.filled{background:#8a2be2;box-shadow:0 0 4px #8a2be2;}
+        .hardware .dot.filled{background:#00ff41;box-shadow:0 0 4px #00ff41;}
+        .lang     .dot.filled{background:#ffffff;box-shadow:0 0 4px #fff;}
+      </style>
+
+      <div class="mx">
+
+        <!-- KERNEL & OS -->
+        <div class="domain kernel">
+          <div class="domain-header">KERNEL &amp; OS</div>
+          <div class="skill-row"><span class="skill-name">C</span><div class="bar-track"><div class="bar-fill" style="--w:97%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">C++</span><div class="bar-track"><div class="bar-fill" style="--w:94%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Assembly</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Linux Kernel</span><div class="bar-track"><div class="bar-fill" style="--w:85%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">GDB / LLDB</span><div class="bar-track"><div class="bar-fill" style="--w:90%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">QEMU / KVM</span><div class="bar-track"><div class="bar-fill" style="--w:78%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+        </div>
+
+        <!-- SECURITY -->
+        <div class="domain security">
+          <div class="domain-header">SECURITY</div>
+          <div class="skill-row"><span class="skill-name">Reverse Eng.</span><div class="bar-track"><div class="bar-fill" style="--w:95%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Exploit Dev</span><div class="bar-track"><div class="bar-fill" style="--w:90%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Ghidra / IDA</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Cryptography</span><div class="bar-track"><div class="bar-fill" style="--w:82%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Vuln Research</span><div class="bar-track"><div class="bar-fill" style="--w:92%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Binary Analysis</span><div class="bar-track"><div class="bar-fill" style="--w:87%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+        </div>
+
+        <!-- AI & ML -->
+        <div class="domain ai">
+          <div class="domain-header">AI &amp; ML</div>
+          <div class="skill-row"><span class="skill-name">Python</span><div class="bar-track"><div class="bar-fill" style="--w:93%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">PyTorch</span><div class="bar-track"><div class="bar-fill" style="--w:86%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Whisper / ASR</span><div class="bar-track"><div class="bar-fill" style="--w:84%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">CUDA</span><div class="bar-track"><div class="bar-fill" style="--w:75%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">TensorFlow</span><div class="bar-track"><div class="bar-fill" style="--w:80%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Fine-tuning</span><div class="bar-track"><div class="bar-fill" style="--w:83%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+        </div>
+
+        <!-- WEB & MOBILE -->
+        <div class="domain web">
+          <div class="domain-header">WEB &amp; MOBILE</div>
+          <div class="skill-row"><span class="skill-name">React</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">FastAPI</span><div class="bar-track"><div class="bar-fill" style="--w:85%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Flutter</span><div class="bar-track"><div class="bar-fill" style="--w:82%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">TypeScript</span><div class="bar-track"><div class="bar-fill" style="--w:86%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">WebGL / GLSL</span><div class="bar-track"><div class="bar-fill" style="--w:90%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></div></div>
+          <div class="skill-row"><span class="skill-name">WebGPU</span><div class="bar-track"><div class="bar-fill" style="--w:75%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span></div></div>
+        </div>
+
+        <!-- HARDWARE -->
+        <div class="domain hardware">
+          <div class="domain-header">HARDWARE</div>
+          <div class="skill-row"><span class="skill-name">JTAG / SWD</span><div class="bar-track"><div class="bar-fill" style="--w:85%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">UEFI / BIOS</span><div class="bar-track"><div class="bar-fill" style="--w:80%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Firmware RE</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Side Channel</span><div class="bar-track"><div class="bar-fill" style="--w:78%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Fault Inject</span><div class="bar-track"><div class="bar-fill" style="--w:75%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Embedded/MCU</span><div class="bar-track"><div class="bar-fill" style="--w:82%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+        </div>
+
+        <!-- LANG DESIGN -->
+        <div class="domain lang">
+          <div class="domain-header">LANG DESIGN</div>
+          <div class="skill-row"><span class="skill-name">Compiler Des.</span><div class="bar-track"><div class="bar-fill" style="--w:85%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Rust</span><div class="bar-track"><div class="bar-fill" style="--w:82%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">LLVM IR</span><div class="bar-track"><div class="bar-fill" style="--w:78%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">WASM / WASI</span><div class="bar-track"><div class="bar-fill" style="--w:80%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">GLSL / WGSL</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+          <div class="skill-row"><span class="skill-name">Lexer / Parser</span><div class="bar-track"><div class="bar-fill" style="--w:83%"></div></div><div class="dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></div></div>
+        </div>
+
+      </div>
+    </div>
+  </foreignObject>
+</svg>
