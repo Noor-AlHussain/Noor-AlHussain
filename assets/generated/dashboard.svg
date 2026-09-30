@@ -64,7 +64,7 @@
         font-family="'Courier New',Courier,'Lucida Console',monospace" font-size="8" fill="rgba(232,232,240,0.3)" letter-spacing="2">CURRENT STREAK</text>
   <text x="680" y="62" text-anchor="middle"
         font-family="Impact,'Arial Narrow',Arial,sans-serif" font-size="22" font-weight="700"
-        fill="#00ffff" filter="url(#vg)">1d</text>
+        fill="#00ffff" filter="url(#vg)">0d</text>
   <rect x="755" y="12" width="120" height="70" rx="3"
         fill="#12101a" stroke="#8a2be2" stroke-opacity=".25" stroke-width="1"/>
   <text x="815" y="34" text-anchor="middle"
@@ -792,6 +792,10 @@
            width="10" height="10" rx="2"
            fill="#0d0b18" opacity="0.5">
        <title>2026-09-29: 0</title>
+     </rect><rect x="316" y="142"
+           width="10" height="10" rx="2"
+           fill="#0d0b18" opacity="0.5">
+       <title>2026-09-30: 0</title>
      </rect>
 
   <rect x="16" y="230" width="868" height="1" fill="rgba(0,255,255,0.14)"/>
@@ -800,11 +804,11 @@
   <text x="16" y="240" font-family="'Courier New',Courier,'Lucida Console',monospace" font-size="8"
          fill="#0088ff" letter-spacing="3">// ACTIVITY — LAST 14 DAYS</text>
   
-  <polyline points="16,292 38.285714285714285,292 60.57142857142857,292 82.85714285714286,292 105.14285714285714,292 127.42857142857142,292 149.71428571428572,292 172,292 194.28571428571428,292 216.57142857142856,292 238.85714285714283,292 261.1428571428571,292 283.42857142857144,292 305.7142857142857,242" fill="none"
+  <polyline points="16,292 38.285714285714285,292 60.57142857142857,292 82.85714285714286,292 105.14285714285714,292 127.42857142857142,292 149.71428571428572,292 172,292 194.28571428571428,292 216.57142857142856,292 238.85714285714283,292 261.1428571428571,292 283.42857142857144,242 305.7142857142857,292" fill="none"
             stroke="#00ffff" stroke-width="1.5" stroke-linecap="round"
             stroke-linejoin="round" opacity=".7"
             filter="url(#lg)"/>
-  <circle cx="16" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="38.285714285714285" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="60.57142857142857" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="82.85714285714286" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="105.14285714285714" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="127.42857142857142" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="149.71428571428572" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="172" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="194.28571428571428" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="216.57142857142856" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="238.85714285714283" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="261.1428571428571" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="283.42857142857144" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="305.7142857142857" cy="242" r="2.5" fill="#00ffff" opacity=".8"/>
+  <circle cx="16" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="38.285714285714285" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="60.57142857142857" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="82.85714285714286" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="105.14285714285714" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="127.42857142857142" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="149.71428571428572" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="172" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="194.28571428571428" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="216.57142857142856" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="238.85714285714283" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="261.1428571428571" cy="292" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="283.42857142857144" cy="242" r="2.5" fill="#00ffff" opacity=".8"/><circle cx="305.7142857142857" cy="292" r="2.5" fill="#00ffff" opacity=".8"/>
 
 
   <!-- Status bar -->
