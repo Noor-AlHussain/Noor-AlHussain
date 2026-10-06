@@ -1237,6 +1237,89 @@ from before the underlying cause was even identified, not a sign the
 already-applied `pull`/`push_attempts` fix from two rounds ago had
 stopped working. The run before and the runs after it were clean.
 
+### Ninth round — the manifest fix confirmed, and Lighthouse triaged on its merits
+
+**Confirmed, not assumed:** after the `update-badges` change reached the
+repo, the next `tests.yml` run was `success`, and `Update README`,
+`Check Rust Engine`, and `Deploy GitHub Pages` were all green in the same
+run list. Five of the seven workflows had been verified green by this
+point; `Lighthouse CI` was the only one left.
+
+Its output had eight distinct hard failures across five pages (`atom`,
+`dna`, `universe`, `hologram`, `cpu`). Unlike the uniform-zero audits from
+earlier rounds, which had a clear "this isn't computing a value here"
+signature, these needed to be looked at one by one, because several of
+them describe real properties of those pages. They split cleanly into two
+groups.
+
+**One is a genuine accessibility defect, and it was the project's own
+stated priority all along: `tabindex` on `atom` and `dna`.** Neither
+page's source contains the word `tabindex`, so it wasn't coming from
+anything written here. Downloaded the actual `babylonjs` package from npm
+(9.28.0, the same UMD bundle `cdn.babylonjs.com` serves) and searched it
+directly instead of guessing: the engine defaults `canvasTabIndex` to
+`1`, and `InputManager.attachControl` applies it to the canvas
+(`s.tabIndex = r.canvasTabIndex`) — which `cam.attachControl(canvas,
+true)` triggers in both scenes. A positive `tabindex` forces an element
+to the front of the document's entire tab order, ahead of everything
+else, the back link included (WCAG 2.4.3 Focus Order). This is exactly
+the defect Lighthouse's `tabindex` audit exists to find, and it's a real
+one: every earlier accessibility pass in this file reasoned about code
+written in this repository, and this defect lives in a library default
+applied at runtime — invisible to any audit of the source, visible only
+in the rendered DOM. **Fixed at the source**: `canvasTabIndex: 0` in the
+`Engine` options for both scenes, which is the documented knob for
+exactly this. `0` keeps the canvas keyboard-focusable (so the camera's
+keyboard controls still work) but leaves it in natural DOM order. A
+Babylon build too old to know the option would ignore it rather than
+break; the CDN currently serves 9.x, which honors it. `tabindex` was
+deliberately **not** touched in `lighthouserc.json` — it stays at the
+preset's hard-error level, so a regression there fails the build.
+
+**Seven are performance-class and were set to `warn`:**
+`unused-javascript`, `unminified-javascript`, `legacy-javascript-insight`,
+`total-byte-weight`, `uses-text-compression`, `uses-rel-preconnect`,
+`bf-cache`. The reasoning this time is different from the earlier
+zero-variance audits and shouldn't be confused with it: those were
+artifacts; **these are plausibly real findings**. Pages that load a full
+Babylon.js bundle or unminified Three.js/OGL module builds from a CDN
+genuinely do ship a lot of unused and unminified JavaScript. They're the
+direct, known cost of the architecture documented in "3D engine
+distribution" above — CDN-loaded engines per scene, no build step — and
+this project's own `lighthouse-ci.yml` already states the policy
+explicitly: accessibility is a hard error, and "performance is a soft
+warn: three of these pages load full 3D engines from CDN, and a low
+performance score from CDN weight isn't the same class of problem as a
+real accessibility regression." `categories:performance` was already set
+to `warn` to match, but the `lighthouse:no-pwa` preset also enables the
+individual performance audits as errors, so that stated policy was never
+actually in effect for them — the config contradicted the project's own
+documented intent. Setting these seven to `warn` makes the config say
+what the project already said. They stay visible in every run's output;
+they just don't fail the build. The actual levers for shrinking them —
+minified engine builds, or tree-shaken modular imports behind a build
+step — were deliberately not pulled here: the affected pages currently
+work, and changing which files they load can't be browser-tested from
+this environment.
+
+**What this can't confirm:** Lighthouse needs a real Chrome, which isn't
+available here, so the `tabindex` fix is verified at the source level —
+the library code path and the audit's own definition — not by watching
+the audit pass. The next real `lhci` run is the actual confirmation.
+
+**Also:** `.gitignore` now ignores local troubleshooting output at the
+repo root (`/diagnose*`, `/*-log.txt`, `/*-log-*.txt`, `/*-fail.txt`,
+`/deploy-full.txt`). Those files come from running `gh run view --log`
+and the diagnose scripts by hand inside the repo folder, and they were
+committed once by accident through `git add -A`. The patterns are
+anchored to the root on purpose — checked with `git check-ignore` in a
+throwaway repo that all nine junk filenames seen in this project are
+caught, while look-alikes in subdirectories (`scripts/diagnose-helper.js`,
+`assets/build-log.txt`) and real files like `data/research-log.yaml` are
+not. Because every upload replaces the working tree wholesale with the
+zip's contents, this has to live in the zip's own `.gitignore` to
+survive the next replacement, not just in a local edit.
+
 ---
 
 ## WCAG 2.2 audit — all nine interactive scenes, plus the four tools

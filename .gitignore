@@ -26,3 +26,13 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Local troubleshooting output (gh run view --log, the diagnose scripts) —
+# produced by hand inside the repo folder while debugging CI, never part of
+# the project. Anchored to the repo root so nothing in a subdirectory is
+# affected. Once already got committed by accident via `git add -A`.
+/diagnose*
+/*-log.txt
+/*-log-*.txt
+/*-fail.txt
+/deploy-full.txt

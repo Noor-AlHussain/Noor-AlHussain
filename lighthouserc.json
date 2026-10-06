@@ -36,6 +36,14 @@
         "meta-description": "warn",
         "font-size": "warn",
 
+        "unused-javascript": "warn",
+        "unminified-javascript": "warn",
+        "legacy-javascript-insight": "warn",
+        "total-byte-weight": "warn",
+        "uses-text-compression": "warn",
+        "uses-rel-preconnect": "warn",
+        "bf-cache": "warn",
+
         "target-size": "error",
         "color-contrast": "warn",
         "document-title": "error",

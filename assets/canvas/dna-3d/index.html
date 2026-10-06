@@ -44,7 +44,11 @@
   const canvas = document.getElementById('c');
   let engine;
   try {
-    engine = new BABYLON.Engine(canvas, true);
+    // canvasTabIndex: Babylon defaults this to 1 and applies it in
+    // cam.attachControl() below — a positive tabindex puts the canvas ahead
+    // of every other focusable element in the tab order (WCAG 2.4.3 Focus
+    // Order), the back link included. 0 keeps it focusable in DOM order.
+    engine = new BABYLON.Engine(canvas, true, { canvasTabIndex:0 });
   } catch (e) {
     document.getElementById('fallback').style.display = 'flex';
     canvas.style.display = 'none';

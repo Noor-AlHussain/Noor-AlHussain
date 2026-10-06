@@ -46,7 +46,12 @@
   let engine;
   try {
     engine = new BABYLON.Engine(canvas, true, {
-      preserveDrawingBuffer:true, stencil:true
+      preserveDrawingBuffer:true, stencil:true,
+      // Babylon defaults this to 1 and applies it in cam.attachControl()
+      // below — a positive tabindex puts the canvas ahead of every other
+      // focusable element in the tab order (WCAG 2.4.3 Focus Order), the
+      // back link included. 0 keeps it keyboard-focusable in DOM order.
+      canvasTabIndex:0
     });
   } catch (e) {
     document.getElementById('fallback').style.display = 'flex';
