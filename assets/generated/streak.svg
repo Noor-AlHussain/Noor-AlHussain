@@ -11,7 +11,7 @@
           fill="rgba(232,232,240,0.35)" letter-spacing="3">TOTAL CONTRIBUTIONS</text>
     <text x="150" y="76" text-anchor="middle"
           font-family="Orbitron,monospace" font-size="28" font-weight="700"
-          fill="#00ffff" filter="url(#glow)">3</text>
+          fill="#00ffff" filter="url(#glow)">4</text>
   
     <text x="450" y="36" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="9"
