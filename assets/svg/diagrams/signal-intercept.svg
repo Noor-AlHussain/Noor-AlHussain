@@ -90,7 +90,6 @@
         .c2 { animation-delay: 0.7s; }
         .c3 { animation-delay: 1.1s; }
         .c4 { animation-delay: 1.5s; }
-        .c5 { animation-delay: 1.9s; }
 
         .chan-id {
           font-size: 10px;
@@ -218,26 +217,19 @@
           <div class="channel c2">
             <span class="chan-id">CH-02</span>
             <span class="chan-name">X / Twitter</span>
-            <span class="chan-addr">x.com/NoorHack</span>
+            <span class="chan-addr">x.com/NoorHack_</span>
             <span class="chan-status active">ACTIVE</span>
           </div>
 
           <div class="channel c3">
             <span class="chan-id">CH-03</span>
-            <span class="chan-name">LinkedIn</span>
-            <span class="chan-addr">linkedin.com/in/Noor-AlHussain</span>
-            <span class="chan-status active">ACTIVE</span>
-          </div>
-
-          <div class="channel c4">
-            <span class="chan-id">CH-04</span>
             <span class="chan-name">Email</span>
             <span class="chan-addr">noorhack.work@gmail.com</span>
             <span class="chan-status active">ACTIVE</span>
           </div>
 
-          <div class="channel c5">
-            <span class="chan-id">CH-05</span>
+          <div class="channel c4">
+            <span class="chan-id">CH-04</span>
             <span class="chan-name">CLASSIFIED</span>
             <span class="chan-addr">— ENCRYPTED —</span>
             <span class="chan-status classified">RESTRICTED</span>

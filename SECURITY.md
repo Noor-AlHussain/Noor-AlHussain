@@ -31,7 +31,7 @@ That said, real security issues are still possible and worth reporting properly.
 
 Please report privately rather than opening a public issue:
 
-- **Email:** noorhack.work@gmail.com
+- **Email:** noorhack.dev@gmail.com
 - **Subject line:** `[SECURITY] <short description>`
 
 Include what you found, how to reproduce it, and — if you have one — a

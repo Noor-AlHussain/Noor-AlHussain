@@ -16,7 +16,9 @@ tests/diffs/
 # Rust / wasm-pack
 assets/canvas/rust-engine/target/
 assets/canvas/rust-engine/pkg/
-Cargo.lock
+# Cargo.lock is deliberately NOT ignored here: rust-engine is a deployed
+# application, and the lock is what makes CI build the exact dependency set
+# that was compiled and run before upload.
 
 # OS
 .DS_Store

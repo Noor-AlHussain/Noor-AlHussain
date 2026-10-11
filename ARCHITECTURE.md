@@ -1320,6 +1320,132 @@ not. Because every upload replaces the working tree wholesale with the
 zip's contents, this has to live in the zip's own `.gitignore` to
 survive the next replacement, not just in a local edit.
 
+### Tenth round — rust-engine blank: root cause reproduced in a real browser, then fixed
+
+**What changed about the environment.** This round the sandbox could reach
+apt and crates.io, which made two things possible that earlier rounds
+recorded as impossible: a real Rust toolchain (rustc 1.91.1 from apt, with
+a locally patched copy of the std sources so `-Zbuild-std` can target
+`wasm32-unknown-unknown`) and a real browser (HeadlessChrome 153 from the
+`@sparticuz/chromium` npm package, driven by `puppeteer-core`, with WebGPU
+and WebGL2 both served by SwiftShader). Neither is guaranteed in a future
+session; check before relying on them.
+
+**Reproduction.** The crate exactly as shipped (wgpu 0.19.4) was compiled
+to wasm and loaded with the shipped `index.html` in Chrome 153. Result: the
+same page as the screenshot. `navigator.gpu` present, boot log hidden (so
+`init()` had resolved), no fallback panel, canvas still at its default
+300x150, nothing drawn. The console held the actual cause, which no amount
+of reading the code had surfaced:
+
+```
+panicked at src/lib.rs:90:14: failed to create device:
+RequestDeviceError { inner: WebGpu(JsValue(OperationError: Failed to
+execute 'requestDevice' on 'GPUAdapter': The limit
+"maxInterStageShaderComponents" with a non-undefined value is not
+recognized.
+```
+
+**Root cause.** wgpu 0.19.4's WebGPU backend always puts
+`maxInterStageShaderComponents` into `requiredLimits` (`map_js_sys_limits`
+in `backend/webgpu.rs`). That limit was removed from the WebGPU spec;
+Chrome deprecated it in 133 and removed it in 135, and `requestDevice`
+rejects limit names it does not recognise. So on any current Chrome the
+device is never created, the `expect()` on it panics, and because that panic
+had no route to the page, the result was a silent blank canvas. Upstream
+tracked it as gfx-rs/wgpu issue #6290; the fix landed with the move to
+vendored WebGPU bindings in later wgpu releases. This supersedes the Seventh
+round's diagnosis, which was reasoned from the source and so could not find
+a failure that only exists at the browser's API boundary. The fixes made then
+(uniform padding, an explicit first redraw) were not wrong; they were not the
+cause.
+
+**The fix.**
+
+- wgpu 0.19.4 to 30.0.1 (MSRV 1.87). `winit` and the unused `pollster` are
+  gone: wgpu now renders straight into a `<canvas>` the crate creates, driven
+  by a `requestAnimationFrame` loop. That removes the event loop that
+  "throws on purpose" on the web and the canvas-sizing guesswork around it.
+- `Cargo.lock` is now tracked (and no longer in `.gitignore`), so CI builds
+  the dependency set that was actually compiled and run. `cargo fetch
+  --locked` passes against it.
+- Device limits are `Limits::downlevel_webgl2_defaults()` raised to the
+  adapter's real texture-size limits, valid on both backends.
+- Backend order is WebGPU, then WebGL2, each attempt on a fresh canvas
+  (a canvas keeps whichever context type it got first). The page's old
+  `if (!navigator.gpu)` early exit is gone, so a browser without WebGPU now
+  gets the real engine on WebGL2 instead of a dead end.
+- Nothing in the start-up path panics. `start()` returns a rejected promise
+  with a readable reason, a panic hook and wgpu's uncaptured-error handler
+  forward to the page through a reporter callback, and the fallback panel
+  shows the reason. This closes the known gap that a panic never reached the
+  fallback UI. The BACK link now sits above the fallback overlay.
+- Rendering fixes found while looking at real output: a depth buffer (the
+  cubes overlap in screen space, so draw order was deciding visibility),
+  a non-sRGB surface format preferred (so the clear colour matches the page
+  background on every backend), a camera distance that grows for portrait
+  aspect ratios (the sphere was wider than a phone screen), and a pixel
+  ratio capped at 2.
+- The badge now reads `RUST -> WASM -> WGPU` with a live line showing the
+  backend, canvas size and frame rate, so a phone without developer tools can
+  report what actually happened.
+
+**Confirmed by a real run in this session:**
+
+- Reproduction of the failure with the shipped code, with the console message
+  above.
+- The new crate compiles for `wasm32-unknown-unknown` with no warnings, and
+  the output was accepted by binaryen 133's `wasm-opt -Os` (the step
+  `wasm-pack` runs); the optimised module was loaded and ran on both backends.
+- `cargo clippy --target wasm32-unknown-unknown -- -D warnings`, the exact
+  command in `check-rust.yml`, passes on clippy 1.91.1 (it first reported one
+  `type_complexity` finding, fixed with a type alias; the three browser
+  scenarios below were then re-run against the final source).
+- WebGPU path in Chrome 153: device created (the step that used to panic),
+  pipeline and bind groups valid, no uncaptured wgpu errors, about 60 frames
+  per second.
+- WebGL2 path (WebGPU hidden from the page): the voxel sphere renders,
+  confirmed on pixels in a screenshot, fits a 408x748 CSS-pixel portrait
+  viewport, and the background matches the page.
+- Neither backend available: the fallback panel appears with the full reason
+  text.
+- The portal loader banner (below), screenshotted in the same browser.
+
+**Not confirmed:**
+
+- WebGPU pixel output. This environment cannot capture WebGPU canvases: a
+  plain JavaScript page that clears a WebGPU canvas to red also screenshots
+  white here, and `mapAsync` after presenting fails with "A valid external
+  Instance reference no longer exists" even without any Rust or wgpu involved.
+  So the WebGPU path is confirmed up to "runs without errors", not "I saw the
+  sphere".
+- Any real phone GPU (Mali, Adreno). SwiftShader is a software renderer.
+- The panic reporting hook with a real panic; it is wired but was not
+  triggered.
+- CI itself. `check-rust.yml` runs on `stable`, which is newer than the 1.91.1
+  used here and may carry extra lints; `deploy-pages.yml`'s `wasm-pack` step
+  and `lighthouse-ci.yml` run only after upload.
+
+**Also this round (not engine work):**
+
+- LinkedIn removed everywhere (there is no account): the `resume.json`
+  profile, the README badge, the portal button, and the CH-03 row of the
+  signal-intercept diagram (the remaining channels were renumbered
+  CH-01 to CH-04).
+- The X handle is `NoorHack_` (trailing underscore), updated in `resume.json`,
+  the README badge and link, the portal button and the signal-intercept
+  diagram. The persona handle `@NoorHack` used elsewhere as a display name was
+  left as it was.
+- `SECURITY.md` now lists the technical address `noorhack.dev@gmail.com`.
+  The other contact surfaces (`resume.json`, README, portal, the
+  signal-intercept diagram and its encoded easter egg) still carry the work
+  address, so the earlier note that all of them match no longer holds, by
+  choice: the repository deliberately does not list every address.
+- The portal loader banner was broken: the `r` glyph was one column short in
+  its top two rows, so everything from `H` onward was shifted against its own
+  lower rows. Regenerated from figlet's standard font and diffed row by row
+  (the bottom three rows were already correct).
+
 ---
 
 ## WCAG 2.2 audit — all nine interactive scenes, plus the four tools
@@ -1657,6 +1783,13 @@ to `cargo check` against, so there is no way to catch a broken bump before
 it ships. `check-rust.yml` exists specifically to catch problems like this
 on first real push — but shipping code expected to fail `cargo check` and
 relying on CI to catch it isn't the same thing as doing the upgrade properly.
+
+**Update (tenth round):** the reasoning above is superseded. Leaving the pin
+in place was not harmless: wgpu 0.19.4's WebGPU backend sends a limit that
+browsers have since removed, and that is what kept `rust-engine` blank (see
+the Tenth round). The upgrade to 30.0.1 was done with a real Rust toolchain
+and checked in a real Chromium, which is the condition this note said was
+missing.
 
 **OGL (`skill-universe`) — pinned version not touched, lowest-risk case.**
 Pinned to 1.0.3; current is 1.0.11, a patch-level gap within the same

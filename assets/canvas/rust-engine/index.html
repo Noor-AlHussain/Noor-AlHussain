@@ -17,7 +17,7 @@
     #badge{position:fixed;top:16px;right:20px;font-family:'Share Tech Mono','Courier New',monospace;
       font-size:9px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
       border:1px solid rgba(0,255,255,0.1);padding:4px 10px;text-align:right;}
-    #back{position:fixed;top:16px;left:20px;font-family:'Share Tech Mono','Courier New',monospace;
+    #back{position:fixed;z-index:6;top:16px;left:20px;font-family:'Share Tech Mono','Courier New',monospace;
       font-size:11px;color:rgba(0,255,255,0.55);letter-spacing:.2em;
       text-decoration:none;border:1px solid rgba(0,255,255,0.4);padding:6px 12px;}
     #back:hover{color:#00ffff;border-color:rgba(0,255,255,0.6);}
@@ -25,6 +25,7 @@
       align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;
       font-family:'Share Tech Mono','Courier New',monospace;padding:0 20px;}
     #fallback p{color:rgba(0,255,255,0.6);letter-spacing:.15em;font-size:12px;max-width:480px;line-height:1.6;}
+    #fallback #fallback-reason{font-size:10px;letter-spacing:.08em;word-break:break-word;}
     #boot-log{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:4;
       font-family:'Share Tech Mono','Courier New',monospace;font-size:11px;color:#00ff41;
       letter-spacing:.1em;white-space:pre;text-align:left;opacity:1;transition:opacity .4s;}
@@ -33,37 +34,51 @@
 </head>
 <body>
   <a id="back" href="../../../README.md">&#x2190; BACK</a>
-  <div id="badge">RUST &#x2192; WASM &#x2192; WEBGPU<br/>compiled, not interpreted</div>
+  <div id="badge">RUST &#x2192; WASM &#x2192; WGPU<br/>compiled, not interpreted<br/><span id="backend">backend: starting</span></div>
   <div id="label">// VOID-ENGINE — VOXEL SPHERE — RUST + WGPU + WASM</div>
   <div id="boot-log">$ cargo build --target wasm32-unknown-unknown --release
 $ wasm-bindgen --target web ./target/.../void_engine.wasm
 &gt; loading module...</div>
-  <div id="void-engine-canvas" role="img" aria-label="Interactive voxel sphere rendered by a Rust and wgpu engine compiled to WebAssembly and running on WebGPU"></div>
-  <div id="fallback">
-    <p>WebGPU is required for void-engine and is not available in this browser.<br/>
-    Supported on Chrome/Edge 113+, Safari 26+ (macOS Tahoe/iOS 26+), and<br/>
-    Firefox on Windows since v141 — no longer Nightly-only. Firefox on<br/>
-    Linux/Android isn't there yet.</p>
+  <div id="void-engine-canvas" role="img" aria-label="Rotating voxel sphere rendered by a Rust and wgpu engine compiled to WebAssembly, using WebGPU with a WebGL2 fallback"></div>
+  <div id="fallback" role="alert">
+    <p>void-engine needs WebGPU or WebGL2 and could not start in this browser.</p>
+    <p id="fallback-reason"></p>
   </div>
 
   <script type="module">
-    if (!navigator.gpu) {
-      document.getElementById('fallback').style.display = 'flex';
-      document.getElementById('boot-log').classList.add('hide');
-    } else {
-      import('./pkg/void_engine.js')
-        .then(mod => mod.default())
-        .then(() => {
-          setTimeout(() => document.getElementById('boot-log').classList.add('hide'), 600);
-        })
-        .catch(err => {
-          console.warn('void-engine failed to load, showing fallback:', err);
-          document.getElementById('fallback').style.display = 'flex';
-          document.getElementById('fallback').querySelector('p').textContent =
-            'void-engine failed to initialize: ' + err.message;
-          document.getElementById('boot-log').classList.add('hide');
-        });
+    const el = (id) => document.getElementById(id);
+    let firstFrame = false;
+
+    function showFailure(reason) {
+      el('fallback-reason').textContent = reason;
+      el('fallback').style.display = 'flex';
+      el('boot-log').classList.add('hide');
     }
+
+    // Called by the Rust side as (kind, message): backend, frame, stats, error.
+    function onEngineEvent(kind, message) {
+      if (kind === 'backend') {
+        el('backend').textContent = 'backend: ' + message;
+      } else if (kind === 'frame') {
+        firstFrame = true;
+        el('boot-log').classList.add('hide');
+      } else if (kind === 'stats') {
+        el('backend').textContent = message;
+      } else if (kind === 'error') {
+        if (firstFrame) { el('backend').textContent = 'error: ' + message; }
+        else { showFailure(message); }
+      }
+    }
+
+    import('./pkg/void_engine.js')
+      .then(async (engine) => {
+        await engine.default();
+        await engine.start('void-engine-canvas', onEngineEvent);
+      })
+      .catch((err) => {
+        console.warn('void-engine failed to start:', err);
+        showFailure(String((err && err.message) || err));
+      });
   </script>
 </body>
 </html>

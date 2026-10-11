@@ -85,10 +85,10 @@ From transistors to transformers. No layer untouched.
 [![Validate Assets](https://github.com/Noor-AlHussain/Noor-AlHussain/actions/workflows/validate-assets.yml/badge.svg)](https://github.com/Noor-AlHussain/Noor-AlHussain/actions/workflows/validate-assets.yml)
 
 <!-- LAST_BUILD_BADGE_START -->
-![Last Updated](https://img.shields.io/badge/last%20build-2026--10--11%2005%3A15%20UTC-00ff41?style=flat-square)
+![Last Updated](https://img.shields.io/badge/last%20build-2026--07--19%2020%3A09%20UTC-00ff41?style=flat-square)
 <!-- LAST_BUILD_BADGE_END -->
 <!-- LOC_BADGE_START -->
-![LOC](https://img.shields.io/badge/this%20repo-13.6k%20LOC%20hand--written-00ffff?style=flat-square)
+![LOC](https://img.shields.io/badge/this%20repo-11.8k%20LOC%20hand--written-00ffff?style=flat-square)
 <!-- LOC_BADGE_END -->
 
 <br/>
@@ -291,9 +291,7 @@ A complete DPLL solver running in the browser, with an animated search tree and 
 
 [![GitHub](https://img.shields.io/badge/GITHUB-Noor--AlHussain-00ffff?style=for-the-badge&logo=github&logoColor=0a0812&cacheSeconds=86400)](https://github.com/Noor-AlHussain)
 &nbsp;
-[![X](https://img.shields.io/badge/X-NoorHack-ffffff?style=for-the-badge&logo=x&logoColor=0a0812&cacheSeconds=86400)](https://x.com/NoorHack)
-&nbsp;
-[![LinkedIn](https://img.shields.io/badge/LINKEDIN-Noor--AlHussain-0077B5?style=for-the-badge&logo=linkedin&logoColor=white&cacheSeconds=86400)](https://www.linkedin.com/in/Noor-AlHussain)
+[![X](https://img.shields.io/badge/X-NoorHack__-ffffff?style=for-the-badge&logo=x&logoColor=0a0812&cacheSeconds=86400)](https://x.com/NoorHack_)
 &nbsp;
 [![Email](https://img.shields.io/badge/EMAIL-noorhack.work%40gmail.com-ff6600?style=for-the-badge&logo=gmail&logoColor=white&cacheSeconds=86400)](mailto:noorhack.work@gmail.com)
 &nbsp;
