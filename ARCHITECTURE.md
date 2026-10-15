@@ -1446,6 +1446,89 @@ cause.
   lower rows. Regenerated from figlet's standard font and diffed row by row
   (the bottom three rows were already correct).
 
+### Eleventh round — three reports from the live repository
+
+**1. The "Validation Failed: Research log out of sync" issue was a false
+alarm, and the cause was in `validate-assets.yml`.**
+
+The issue named commit f27bfb3, a bot "update build badges" commit from
+2026-10-13. Replaying the workflow's own check at that commit (run the
+generator, then `git diff --quiet README.md`) shows README.md already in sync
+with `data/research-log.yaml`; the same holds for the previous round's zip and
+for main today. So the log was never out of sync.
+
+What actually happened: the job checks out the repository and runs
+`node scripts/generate-research.js`, which imports the `yaml` package, but no
+step installs dependencies. On a clean checkout the script dies with
+`ERR_MODULE_NOT_FOUND` (reproduced here). The step is `continue-on-error`, so
+the job still ends green, but it aborts before writing `research_ok`. The
+issue step's `research_ok == '0'` test then fires on the missing value (the
+Actions expression rules compare with loose equality and coerce a missing
+value to 0), and the issue body, built from `research_ok === '1'`, reports
+"out of sync" for anything that is not an explicit 1. The note already in
+`generate-research.js` describes the same shape of failure caused by an exit
+code; this is the other way into it.
+
+A green `validate-assets.yml` therefore never meant the checks passed: every
+check in it is `continue-on-error` and the job's only output is an issue. That
+is the same lesson as `deploy-pages.yml`'s badge.
+
+Fix, all in `validate-assets.yml`:
+
+- `setup-node` plus `npm ci` (with `PUPPETEER_SKIP_DOWNLOAD`, as in
+  `deploy-pages.yml`) before the check, so the generator can run.
+- The check writes `research_ok` on every path: `1` in sync, `0` out of
+  sync, `error` if the generator itself failed.
+- The issue step fires on anything other than an explicit `1`, but now says
+  "check could not run" when that is what happened instead of claiming the log
+  is out of sync, and the issue links the run that produced it.
+- `workflow_dispatch` was added so the checks can be run on demand.
+- The unquoted shell expansions that actionlint flagged in this file were
+  quoted.
+
+Confirmed in this session: the generator cannot run on a clean checkout and
+README is in sync at f27bfb3 (both reproduced); actionlint 1.7.12 with
+shellcheck is clean on the edited workflows; the new research step was
+executed for real in three scenarios (in sync gives 1, a committed README with
+a wrong section gives 0 and prints the diff, dependencies missing gives
+error); the issue script ran against mocks for five scenarios, including the
+old unset-output case. Not confirmed: the workflow on GitHub itself, and the
+exact expression evaluation that filed the issue, which is inferred from the
+documented coercion rules and from the issue's content (the diagnose output
+held no log for this workflow). Every earlier run of the broken check may have
+opened its own issue; those are noise and can be closed.
+
+**2. The LinkedIn button and the garbled banner in the screenshots were an old
+copy.** The live portal, fetched after those screenshots were taken, already
+had no LinkedIn button and the corrected banner, matching main. The column
+alignment in the screenshot of the banner was measured against renders of both
+versions and matches the old art, so it came from a cached page or a tab that
+was never reloaded. A check that does not depend on any browser cache:
+`curl -s https://noor-alhussain.github.io/Noor-AlHussain/ | grep -c -i linkedin`
+prints 0.
+
+**3. Dependabot pull requests failing.** Three Dependabot pull requests were
+opened on 2026-10-12, about three hours after the push; `check-rust` ran only
+on #78 (the Cargo one) because it is path-filtered.
+
+- `check-rust` on #78 failed with two E0599 errors: a glam bump, where
+  `Mat4::perspective_rh` and `Mat4::look_at_rh` no longer exist (checked in
+  the glam 0.34.1 source; projection and look-at moved into its camera
+  module). Moving to it is a code change in `src/math.rs`, not a lockfile
+  change, so `dependabot.yml` now ignores glam minor and major bumps (patch
+  releases still come through), the same pattern already used for three.js.
+  Remove the entry when `math.rs` is migrated.
+- `tests.yml`'s manifest job failed on all three. The one log available (run
+  38189856848) shows `package.json: FAILED`; the other two logs were not in
+  the diagnose output, but `Cargo.toml` and the workflow files are covered by
+  the manifest too, so the same cause is the likely one. By construction it
+  cannot pass: Dependabot edits files the manifest covers and cannot
+  regenerate the manifest. The job now skips pull requests authored by
+  Dependabot and still runs on pushes and on every other pull request.
+  Consequence to remember: merging a Dependabot PR leaves the manifest stale
+  on main until the next `update-readme.yml` run, so run it right after
+  merging.
+
 ---
 
 ## WCAG 2.2 audit — all nine interactive scenes, plus the four tools

@@ -10,6 +10,9 @@ on:
   workflow_run:
     workflows: ["Update README — Master Pipeline"]
     types: [completed]
+  # Manual runs, so the checks can be exercised on demand instead of only as
+  # a side effect of a push or of update-readme.yml finishing.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,7 +51,7 @@ jobs:
               echo "EMPTY: $f"
               MISSING="$MISSING $f (empty)"
               FAILED=1
-            elif [ $(wc -c < "$f") -lt 200 ]; then
+            elif [ "$(wc -c < "$f")" -lt 200 ]; then
               echo "TOO_SMALL: $f ($(wc -c < "$f") bytes)"
               MISSING="$MISSING $f (too small)"
               FAILED=1
@@ -56,8 +59,8 @@ jobs:
               echo "OK: $f ($(wc -c < "$f") bytes)"
             fi
           done
-          echo "failed=$FAILED"     >> $GITHUB_OUTPUT
-          echo "missing=$MISSING"   >> $GITHUB_OUTPUT
+          echo "failed=$FAILED"     >> "$GITHUB_OUTPUT"
+          echo "missing=$MISSING"   >> "$GITHUB_OUTPUT"
 
       # The manifest existing isn't enough — it has to actually verify.
       # A manifest that fails its own check is worse than no manifest.
@@ -66,14 +69,31 @@ jobs:
         run: |
           if [ -f assets/integrity-manifest.asc ]; then
             if sha256sum -c assets/integrity-manifest.asc; then
-              echo "manifest_ok=1" >> $GITHUB_OUTPUT
+              echo "manifest_ok=1" >> "$GITHUB_OUTPUT"
             else
-              echo "manifest_ok=0" >> $GITHUB_OUTPUT
+              echo "manifest_ok=0" >> "$GITHUB_OUTPUT"
               echo "::error::integrity-manifest.asc exists but does NOT verify against the committed files"
             fi
           else
-            echo "manifest_ok=0" >> $GITHUB_OUTPUT
+            echo "manifest_ok=0" >> "$GITHUB_OUTPUT"
           fi
+
+      # scripts/generate-research.js imports the `yaml` package, so the sync
+      # check below cannot run on a bare checkout. Without these two steps it
+      # aborted on ERR_MODULE_NOT_FOUND on every run, left its output unset,
+      # and the issue step then filed a "research log out of sync" issue each
+      # time even though the log was in sync.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies (needed by scripts/generate-research.js)
+        run: npm ci
+        env:
+          # Same reasoning as deploy-pages.yml: nothing here needs Puppeteer's
+          # browser, and its download is the part of `npm ci` that can hang.
+          PUPPETEER_SKIP_DOWNLOAD: "true"
 
       # research-log.yaml should never silently drift from what's rendered
       # in README.md — if someone edits the YAML and forgets to regenerate,
@@ -81,24 +101,32 @@ jobs:
       - name: Check research log is in sync with README
         id: research_check
         run: |
-          node scripts/generate-research.js
+          # Every path writes research_ok, so an aborted step can no longer
+          # leave it unset: 1 = in sync, 0 = out of sync, error = the generator
+          # itself failed and the comparison could not be made.
+          if ! node scripts/generate-research.js; then
+            echo "research_ok=error" >> "$GITHUB_OUTPUT"
+            echo "::error::scripts/generate-research.js failed, so the research log sync check could not run"
+            exit 0
+          fi
           if git diff --quiet README.md; then
-            echo "research_ok=1" >> $GITHUB_OUTPUT
+            echo "research_ok=1" >> "$GITHUB_OUTPUT"
           else
-            echo "research_ok=0" >> $GITHUB_OUTPUT
+            echo "research_ok=0" >> "$GITHUB_OUTPUT"
             echo "::error::README.md's RESEARCH LOG section is out of sync with data/research-log.yaml — run 'node scripts/generate-research.js' and commit the result"
             git diff README.md
           fi
         continue-on-error: true
 
       - name: Open issue if assets are missing or manifest/research is out of sync
-        if: steps.check.outputs.failed == '1' || steps.manifest_check.outputs.manifest_ok == '0' || steps.research_check.outputs.research_ok == '0'
+        if: steps.check.outputs.failed == '1' || steps.manifest_check.outputs.manifest_ok == '0' || steps.research_check.outputs.research_ok != '1'
         uses: actions/github-script@v7
         with:
           script: |
             const missing = `${{ steps.check.outputs.missing }}`.trim();
             const manifestOk = `${{ steps.manifest_check.outputs.manifest_ok }}` === '1';
-            const researchOk = `${{ steps.research_check.outputs.research_ok }}` === '1';
+            // '1' in sync, '0' out of sync, anything else: the check itself did not run.
+            const research = `${{ steps.research_check.outputs.research_ok }}`;
 
             const problems = [];
             if (missing) {
@@ -108,8 +136,10 @@ jobs:
             if (!manifestOk) {
               problems.push('', '**Integrity manifest does not verify** — `assets/integrity-manifest.asc` is out of date or corrupted.');
             }
-            if (!researchOk) {
+            if (research === '0') {
               problems.push('', '**Research log out of sync** — `README.md` does not match `data/research-log.yaml`. Run `node scripts/generate-research.js`.');
+            } else if (research !== '1') {
+              problems.push('', '**Research log check could not run** — `node scripts/generate-research.js` failed in CI, so sync was not verified either way. See the run log.');
             }
 
             await github.rest.issues.create({
@@ -124,6 +154,7 @@ jobs:
                 '**Action required:** Run the `Update README` workflow manually, or fix locally and push.',
                 '',
                 `*Triggered by commit: ${context.sha}*`,
+                `*Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}*`,
               ].join('\n'),
               labels: ['ci', 'bug'],
             });

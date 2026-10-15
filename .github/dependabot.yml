@@ -33,6 +33,14 @@ updates:
       - "rust"
     commit-message:
       prefix: "deps(cargo)"
+    ignore:
+      # glam 0.34.1 no longer has Mat4::perspective_rh or Mat4::look_at_rh (the
+      # projection and look-at constructors moved into its camera module), so a
+      # bump needs a code migration in src/math.rs, not just a lockfile change.
+      # Dependabot's PR for it failed check-rust with two E0599 errors. Patch
+      # releases still come through; remove this once math.rs is migrated.
+      - dependency-name: "glam"
+        update-types: ["version-update:semver-major","version-update:semver-minor"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
