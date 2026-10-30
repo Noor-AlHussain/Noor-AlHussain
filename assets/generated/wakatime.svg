@@ -13,89 +13,89 @@
           stroke="rgba(0,255,255,0.07)" stroke-width="1"/>
     <text x="32" y="145.5" text-anchor="end"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(0,255,255,0.25)">1.4h</text>
+          fill="rgba(0,255,255,0.25)">1.8h</text>
   
     <line x1="36" y1="105" x2="424" y2="105"
           stroke="rgba(0,255,255,0.07)" stroke-width="1"/>
     <text x="32" y="108" text-anchor="end"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(0,255,255,0.25)">2.7h</text>
+          fill="rgba(0,255,255,0.25)">3.6h</text>
   
     <line x1="36" y1="67.5" x2="424" y2="67.5"
           stroke="rgba(0,255,255,0.07)" stroke-width="1"/>
     <text x="32" y="70.5" text-anchor="end"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(0,255,255,0.25)">4.1h</text>
+          fill="rgba(0,255,255,0.25)">5.4h</text>
   
     <line x1="36" y1="30" x2="424" y2="30"
           stroke="rgba(0,255,255,0.07)" stroke-width="1"/>
     <text x="32" y="33" text-anchor="end"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(0,255,255,0.25)">5.5h</text>
+          fill="rgba(0,255,255,0.25)">7.1h</text>
   
   
-    <rect x="36" y="126.63779224207644" width="48" height="53.36220775792356" rx="2"
-          fill="rgb(0,207,207)" opacity="0.85"/>
+    <rect x="36" y="68.09397055358284" width="48" height="111.90602944641716" rx="2"
+          fill="rgb(0,236,236)" opacity="0.85"/>
     <text x="60" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-23</text>
-    <text x="60" y="122.63779224207644" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-24</text>
+    <text x="60" y="64.09397055358284" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,207,207)">2.0h</text>
+          fill="rgb(0,236,236)">5.3h</text>
   
-    <rect x="90" y="30" width="48" height="150" rx="2"
-          fill="rgb(0,255,255)" opacity="0.85"/>
+    <rect x="90" y="32.45308370204222" width="48" height="147.54691629795778" rx="2"
+          fill="rgb(0,254,254)" opacity="0.85"/>
     <text x="114" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-24</text>
-    <text x="114" y="26" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-25</text>
+    <text x="114" y="28.45308370204222" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,255,255)">5.5h</text>
+          fill="rgb(0,254,254)">7.0h</text>
   
-    <rect x="144" y="103.772774739672" width="48" height="76.227225260328" rx="2"
-          fill="rgb(0,218,218)" opacity="0.85"/>
+    <rect x="144" y="39.00897745362943" width="48" height="140.99102254637057" rx="2"
+          fill="rgb(0,250,250)" opacity="0.85"/>
     <text x="168" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-25</text>
-    <text x="168" y="99.772774739672" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-26</text>
+    <text x="168" y="35.00897745362943" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,218,218)">2.8h</text>
+          fill="rgb(0,250,250)">6.7h</text>
   
-    <rect x="198" y="73.96364263301055" width="48" height="106.03635736698945" rx="2"
-          fill="rgb(0,233,233)" opacity="0.85"/>
+    <rect x="198" y="99.69435334261618" width="48" height="80.30564665738382" rx="2"
+          fill="rgb(0,220,220)" opacity="0.85"/>
     <text x="222" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-26</text>
-    <text x="222" y="69.96364263301055" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-27</text>
+    <text x="222" y="95.69435334261618" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,233,233)">3.9h</text>
+          fill="rgb(0,220,220)">3.8h</text>
   
-    <rect x="252" y="55.48025102288838" width="48" height="124.51974897711162" rx="2"
-          fill="rgb(0,242,242)" opacity="0.85"/>
+    <rect x="252" y="39.78393387473196" width="48" height="140.21606612526804" rx="2"
+          fill="rgb(0,250,250)" opacity="0.85"/>
     <text x="276" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-27</text>
-    <text x="276" y="51.48025102288838" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-28</text>
+    <text x="276" y="35.78393387473196" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,242,242)">4.6h</text>
+          fill="rgb(0,250,250)">6.7h</text>
   
-    <rect x="306" y="71.21980572524194" width="48" height="108.78019427475806" rx="2"
-          fill="rgb(0,234,234)" opacity="0.85"/>
+    <rect x="306" y="30" width="48" height="150" rx="2"
+          fill="rgb(0,255,255)" opacity="0.85"/>
     <text x="330" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-28</text>
-    <text x="330" y="67.21980572524194" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-29</text>
+    <text x="330" y="26" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,234,234)">4.0h</text>
+          fill="rgb(0,255,255)">7.1h</text>
   
-    <rect x="360" y="129.12452549370465" width="48" height="50.87547450629533" rx="2"
-          fill="rgb(0,205,205)" opacity="0.85"/>
+    <rect x="360" y="30.26661280555902" width="48" height="149.73338719444098" rx="2"
+          fill="rgb(0,255,255)" opacity="0.85"/>
     <text x="384" y="192" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgba(232,232,240,0.5)">10-29</text>
-    <text x="384" y="125.12452549370465" text-anchor="middle"
+          fill="rgba(232,232,240,0.5)">10-30</text>
+    <text x="384" y="26.26661280555902" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="8"
-          fill="rgb(0,205,205)">1.9h</text>
+          fill="rgb(0,255,255)">7.1h</text>
   
   <line x1="36" y1="180" x2="424" y2="180"
         stroke="rgba(0,255,255,0.2)" stroke-width="1"/>
