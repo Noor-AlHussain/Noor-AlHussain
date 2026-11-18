@@ -18,7 +18,7 @@
           fill="rgba(232,232,240,0.35)" letter-spacing="3">CURRENT STREAK</text>
     <text x="450" y="76" text-anchor="middle"
           font-family="Orbitron,monospace" font-size="28" font-weight="700"
-          fill="#8a2be2" filter="url(#glow)">1d</text>
+          fill="#8a2be2" filter="url(#glow)">0d</text>
   
     <text x="750" y="36" text-anchor="middle"
           font-family="'Share Tech Mono','Courier New',Courier,monospace" font-size="9"
